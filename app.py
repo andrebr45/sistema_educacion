@@ -922,7 +922,9 @@ def periodos(escola_id):
     else:
         return jsonify([])  # Retornando uma lista vazia se a solicitação não é AJAX
 
+# Executando o aplicativo com configuração para o Heroku
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
     with app.app_context():
-       db.create_all()
-    app.run(debug=True)
+        db.create_all()  # Cria todas as tabelas do banco de dados
+    app.run(host="0.0.0.0", port=port)
