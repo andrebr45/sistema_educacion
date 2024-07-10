@@ -1,3 +1,15 @@
 pip install flask
 pip install flask-sqlalchemy
 pip install PyMuPDF
+
+heroku
+pip install gunicorn
+git status
+git add .
+git commit -m "versao"
+git push heroku
+
+arquivos
+requirements.txt - colocar bibliotecas
+Procfile - web: python app.py
+https://www.youtube.com/watch?v=LGkj6xA5bUc
