@@ -719,7 +719,7 @@ def gerar_pdf(aluno_id):
         # Configurar o idioma para português
         locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
         # Consulta o usuário no banco de dados
-        user = db.session.query(Aluno).get(aluno_id)
+        user = db.session.get(Aluno, aluno_id)
 
         # Verificar o período do aluno
         periodo_aluno = user.periodo.nome
