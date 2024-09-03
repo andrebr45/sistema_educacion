@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Editar Aluno{% endblock %}
+{% block first_title %}Alunos{% endblock %}
+{% block main_title%}Editar Aluno{% endblock %}
+{% block sub_title %}Editar Aluno{% endblock %}
+{% block content %}
+    {% with messages = get_flashed_messages() %}
+            {% if messages%}
+            {% for msg in messages %}
+                <p>{{msg}}</p>
+            {% endfor %}
+            {% endif%}
+    {% endwith %}
+
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/editar.css')}}"> 
+</head>
+<div class="container">
+    <h1>Editar Aluno</h1>
+</div>
+<script src="/static/js/script.js"></script>
+
+
+{% endblock %}

@@ -98,6 +98,9 @@ margin-right: 25px;
 #filtroOpcao{
 	width: 173px;
 }
+.btn_editar{
+  cursor: pointer;
+}
 .btn_pdf{
   cursor: pointer;
 }

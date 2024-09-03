@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block main_title%}Usuário{% endblock %}
 {% block first_title %}Usuários{% endblock %}
-{% block sub_title %}Cadastro de Usuários{% endblock %}
-{% block title %}Novo Usuário{% endblock %}
+{% block sub_title %}Cadastro{% endblock %}
+{% block title %}Cadastro de usuário{% endblock %}
 {% block content %}
     {% with messages = get_flashed_messages() %}
         {% if messages%}
@@ -14,14 +14,14 @@
     
 <head>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/cadastro.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/cadastro_usuario.css')}}">
 </head>
 <div class="container">
     <header>Cadastro</header>
     <form form action="{{ url_for('cadastro') }}" method="POST">
         <div class="form first">
             <div class="details personal">
-                <span class="title">Cadastrar Usuário</span>
+                <span class="title">Informações</span>
                 <div class="fields">
                     <div class="input-field">
                         <label>Nome</label>
@@ -111,7 +111,7 @@
                             <input id="inputCEPForm" name="cd_user_cep" type="text" placeholder="CEP">
                         </div>
                     </div>
-                    <p><input type="submit" value="submit"/></p>
+                    <p><input id="btn_add_usuario" type="submit" value="Cadastrar"/></p>
                 </div> 
             </div> 
         </div>

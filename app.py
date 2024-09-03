@@ -248,12 +248,49 @@ def alunos():
 
     return render_template("alunos.html", alunos=todos_alunos, current_page='alunos')
 
+##API USUARIOS
+@app.route('/api/alunos', methods=['GET'])
+def get_alunos():
+    # Consulta todos os usuários
+    alunos = Aluno.query.all()
+
+    # Converte os alunos para um formato JSON
+    alunos_json = [{
+        'nome': aluno.nome,
+        'ra': aluno.ra,
+        'escola': aluno.escola.nome,
+        'serie': f"{aluno.serie.nome} {aluno.turma.nome}",
+        'periodo': aluno.periodo.nome,
+        'status': aluno.situacao,
+        'id': aluno.id
+    } for aluno in alunos]
+
+    return jsonify(alunos_json)
+
 @app.route("/user/usuarios")
 def usuarios():
      # Consulta todas os usuários
-    usuarios = users.query.all()
+    #usuarios = users.query.all()
 
     return render_template("usuarios.html", usuarios=usuarios, current_page='usuarios')
+
+##API USUARIOS
+@app.route('/api/usuarios', methods=['GET'])
+def get_usuarios():
+    # Consulta todos os usuários
+    usuarios = users.query.all()
+
+    # Converte os usuários para um formato JSON
+    usuarios_json = [{
+        'nome': usuario.name,
+        'matricula': usuario.matricula,
+        'cargo': usuario.cargo,
+        'cadastro': usuario.data,
+        'trabalho': usuario.local_trabalho,
+        'status': usuario.situacao
+    } for usuario in usuarios]
+
+    return jsonify(usuarios_json)
 
 @app.route("/user/funcionarios")
 def funcionarios():
@@ -707,6 +744,32 @@ def editar():
         flash("Você não está logado!")
         return redirect(url_for("login"))
     
+@app.route("/user/alunos/editar/<int:aluno_id>", methods=["POST", "GET"])
+def editar_aluno(aluno_id):
+    if "user_id" in session:
+        found_aluno = users.query.get(aluno_id)
+        if not found_aluno:
+            flash("Aluno não encontrado!")
+            return redirect(url_for("user"))
+
+        if request.method == "POST":
+            found_aluno.email = request.form.get("email")
+            found_aluno.telefone = request.form.get("telefone")
+            # Atualize outros campos conforme necessário
+
+            senha = request.form.get("senha")
+            if senha:
+                found_aluno.senha = generate_password_hash(senha)
+
+            db.session.commit()
+            flash("Informações do aluno foram salvas com sucesso!")
+            return redirect(url_for("user"))
+
+        return render_template("editar_aluno.html", aluno=found_aluno)
+    else:
+        flash("Você não está logado!")
+        return redirect(url_for("login"))
+    
 @app.route("/user/logout")
 def logout():
     flash("Voce saiu do sistema!")
@@ -922,9 +985,7 @@ def periodos(escola_id):
     else:
         return jsonify([])  # Retornando uma lista vazia se a solicitação não é AJAX
 
-# Executando o aplicativo com configuração para o Heroku
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
     with app.app_context():
-        db.create_all()  # Cria todas as tabelas do banco de dados
-    app.run(host="0.0.0.0", port=port)
+       db.create_all()
+    app.run(debug=True)
