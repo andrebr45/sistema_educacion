@@ -1,6 +1,7 @@
 from flask import Flask, redirect, url_for, render_template, request, session, flash, send_file, abort, jsonify
 from datetime import timedelta
 from flask_sqlalchemy import SQLAlchemy
+from io import BytesIO
 import os
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
@@ -779,10 +780,18 @@ def logout():
 @app.route("/gerar_pdf/<int:aluno_id>", methods=["GET"])
 def gerar_pdf(aluno_id):
     if "user_id" in session:
-        # Configurar o idioma para português
-        locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+        try:
+            # Configurar o idioma para português
+            locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+        except locale.Error:
+            # Se falhar, pode tentar um locale genérico ou tratar a formatação de data manualmente
+            locale.setlocale(locale.LC_TIME, 'pt_BR')
+
         # Consulta o usuário no banco de dados
         user = db.session.get(Aluno, aluno_id)
+        
+        if not user:
+            return "Usuário não encontrado", 404
 
         # Verificar o período do aluno
         periodo_aluno = user.periodo.nome
@@ -793,39 +802,33 @@ def gerar_pdf(aluno_id):
             horario_periodo = '13:00h às 17:30h'
         else:  # Noite
             horario_periodo = '18:30h às 22:00h'
-        
-        user.data_nascimento = datetime.strptime(user.data_nascimento, "%Y-%m-%d")
 
         # Formatar a data de nascimento no formato desejado
-        user.data_nascimento = user.data_nascimento.strftime("%d/%m/%Y")
+        user.data_nascimento = datetime.strptime(user.data_nascimento, "%Y-%m-%d").strftime("%d/%m/%Y")
 
-        # Obter a data atual
+        # Obter a data atual formatada
         data_atual = datetime.now().strftime("%d de %B de %Y").capitalize()
 
-        if user:
-            # Renderiza o template HTML com os dados do usuário
-            html_content = render_template("declaracao.html", user=user, data_atual=data_atual, horario_periodo=horario_periodo)
+        # Renderiza o template HTML com os dados do usuário
+        html_content = render_template("declaracao.html", user=user, data_atual=data_atual, horario_periodo=horario_periodo)
 
-            # Cria um novo documento PDF
-            doc = fitz.Document()
+        # Cria um novo documento PDF
+        doc = fitz.Document()
 
-            # Adiciona uma nova página
-            page = doc.new_page()
-            rect = page.rect + (36, 36, -36, -36)
+        # Adiciona uma nova página ao PDF
+        page = doc.new_page()
+        rect = page.rect + (36, 36, -36, -36)
 
-            # Insere o HTML modificado na página
-            page.insert_htmlbox(rect, html_content, archive=fitz.Archive("."))
+        # Insere o HTML na página do PDF
+        page.insert_htmlbox(rect, html_content, archive=fitz.Archive("."))
 
-            # Caminho para salvar o PDF (na pasta raiz do projeto)
-            pdf_filename = f'declaracao_.pdf'
+        # Salva o PDF em memória
+        pdf_buffer = BytesIO()
+        doc.save(pdf_buffer)
+        pdf_buffer.seek(0)
 
-            # Salva o PDF
-            doc.ez_save(pdf_filename)
-
-            # Retorna o arquivo PDF gerado sem download
-            return send_file(pdf_filename, mimetype='application/pdf')
-        else:
-            return "Usuário não encontrado", 404
+        # Retorna o arquivo PDF gerado sem download
+        return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=False, download_name="declaracao_.pdf")
     else:
         return "Você não está logado!", 401
 
