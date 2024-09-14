@@ -64,7 +64,7 @@
             <th><input type='checkbox' id='checkAll'></th>
             <th>Nome</th>
             <th>Cód. CIE</th>
-            <th>Ciclo</th>
+            <th>Categoria</th>
             <th>Telefone</th>
             <th>Alunos</th>
             <th>Status</th>    
@@ -98,7 +98,7 @@
                 { 
                     nome: "{{ escola.nome }}", 
                     codigo: "{{ escola.codigo }}", 
-                    ciclo: "{{ escola.ciclo}}",
+                    categoria: "{{ escola.categoria}}",
                     telefone: "{{ escola.telefone }}",  
                     qnt_alunos: "{{ escola.qnt_alunos }}", 
                     situacao: "{{ escola.situacao }}"
@@ -150,7 +150,7 @@
                 row.innerHTML = "<td><input type='checkbox'></td>" +
                     "<td>" + escola.nome + "</td>" +
                     "<td>" + escola.codigo + "</td>" +
-                    "<td>" + escola.ciclo + "</td>" +
+                    "<td>" + escola.categoria + "</td>" +
                     "<td>" + escola.telefone + "</td>" +
                     "<td>" + escola.qnt_alunos + "</td>" +
                     "<td>" + escola.situacao + "</td>" +

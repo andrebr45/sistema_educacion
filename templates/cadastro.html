@@ -68,19 +68,42 @@
                     </div>
                     <div class="input-field">
                         <label>Local de Trabalho</label>
-                        <input type="text" name="cd_user_trabalho" placeholder="Local de Trabalho" required>
+                        <select name="cd_user_trabalho" type="text" required>
+                            <option>Selecionar o Local de Trabalho</option>
+                            <option value="Secretaria Municipal de Educação">SME</option>
+                            <option value="Supervisão">Supervisão</option>
+                            <option value="Merenda Escolar">Merenda Escolar</option>
+                            <option value="Educação Especial">Educação Especial</option>
+                            <option value="Almoxarifado">Almoxarifado</option>
+                            <option value="Manutenção Escolar">Manutenção Escolar</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Administrador">Administrador</option>
+                        </select>
                     </div>
                     <div class="input-field">
-                        <label>Cargo</label>
-                        <input type="text" name="cd_user_cargo" placeholder="Cargo" required>
+                            <label>Cargo</label>
+                            <select name="cd_user_cargo" type="text" required>
+                                <option>Selecionar o Cargo</option>
+                                <option value="Agente Educacinal">Agente Educacinal</option>
+                                <option value="Professora">Professora</option>
+                                <option value="Diretora">Diretora</option>
+                                <option value="Administrador">Administrador</option>
+                            </select>
                     </div>
+                    <div class="input-field">
+                        <label>Nível de Acesso</label>
+                        <select name="cd_user_nivel_acesso" type="text">
+                            <option disabled>Selecionar Nível</option>
+                            <option value="Basico">Básico</option>
+                            <option value="Avancado">Avançado</option>
+                            <option value="Completo">Completo</option>
+                            <option value="Administrador">Administrador</option>
+                        </select>
+                    </div>
+                    
                     <div class="input-field">
                         <label>Senha</label>
                         <input type="text" name="cd_user_senha" placeholder="Senha" required>
-                    </div>
-                    <div class="input-field">
-                        <label>Confirmar Senha</label>
-                        <input type="text"  name="cd_user_c_senha" placeholder="Confirmar Senha" required>
                     </div>
                 </div>
                 <div class="details ID">

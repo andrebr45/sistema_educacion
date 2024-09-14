@@ -1,14 +1,13 @@
-from flask import Flask, redirect, url_for, render_template, request, session, flash, send_file, abort, jsonify
+from flask import Flask, redirect, url_for, render_template, request, session, flash, send_file, jsonify
 from datetime import timedelta
 from flask_sqlalchemy import SQLAlchemy
-from io import BytesIO
 import os
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
 import fitz
 import locale
-
+import bcrypt
+import json
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.secret_key = "hello"
@@ -24,11 +23,11 @@ class users(db.Model):
     name = db.Column(db.String(100))
     telefone = db.Column(db.String(100))
     email = db.Column(db.String(100))
-    senha = db.Column(db.String(100))
-    data = db.Column(db.String(10))  # Alterado para db.String
-    hora = db.Column(db.String(8))  # Coluna para armazenar a hora
+    senha = db.Column(db.String(100))  # Armazena o hash da senha
+    data = db.Column(db.String(10))
+    hora = db.Column(db.String(8))
     situacao = db.Column(db.String(8))
-
+    nivel_acesso = db.Column(db.String(100))
     genero = db.Column(db.String(100))
     cpf = db.Column(db.String(100))
     data_nascimento = db.Column(db.String(100))
@@ -43,16 +42,16 @@ class users(db.Model):
     cidade = db.Column(db.String(100))
     estado = db.Column(db.String(100))
     cep = db.Column(db.String(100))
-    
-    def __init__(self, name, telefone, email, senha, data, hora, genero, cpf, data_nascimento, matricula, usuario, lotacao, cargo, local_trabalho, situacao, logradouro, numero, bairro, cidade, estado, cep):
+
+    def __init__(self, name, telefone, email, senha, data, hora, genero, cpf, data_nascimento, matricula, usuario, lotacao, cargo, local_trabalho, situacao, nivel_acesso, logradouro, numero, bairro, cidade, estado, cep):
         self.name = name
         self.telefone = telefone
         self.email = email
-        self.senha = generate_password_hash(senha)  # Gera e armazena o hash da senha
+        self.senha = self.generate_password_hash(senha)  # Gera e armazena o hash da senhagenerate_password_hash(senha)  # Gera e armazena o hash da senha
         self.data = data
         self.hora = hora
         self.situacao = situacao
-
+        self.nivel_acesso = nivel_acesso
         self.genero = genero
         self.cpf = cpf
         self.data_nascimento = data_nascimento
@@ -68,20 +67,29 @@ class users(db.Model):
         self.estado = estado
         self.cep = cep
 
-    
-    def set_senha(self, senha):
-            self.senha_hash = generate_password_hash(senha)
+    def generate_password_hash(self, senha):
+        return bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     def check_senha(self, senha):
-            return check_password_hash(self.senha_hash, senha)
+        return bcrypt.checkpw(senha.encode('utf-8'), self.senha.encode('utf-8'))
+
+class LoginHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    login_date = db.Column(db.String(10))  # Data do login
+    login_time = db.Column(db.String(8))   # Hora do login
+
+    user = db.relationship('users', backref=db.backref('logins', lazy=True))
 
 class Escola(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100))
     codigo = db.Column(db.String(100))
-    ciclo = db.Column(db.String(100))
+    categoria = db.Column(db.String(100))
+    tipo = db.Column(db.String(100))
     telefone = db.Column(db.String(100))
     qnt_alunos = db.Column(db.Integer)  # Alteração aqui
+    qnt_funcionarios = db.Column(db.Integer)  # Alteração aqui
     situacao = db.Column(db.String(100))
     data = db.Column(db.String(10))
 
@@ -102,7 +110,7 @@ class Escola(db.Model):
 
     @staticmethod
     def count_ciclo_escola():
-        return Escola.query.filter_by(ciclo='I').count()
+        return Escola.query.filter_by(categoria='CEI').count()
     
 
 class Serie(db.Model):
@@ -148,6 +156,8 @@ class Aluno(db.Model):
     estado = db.Column(db.String(100))
     cep = db.Column(db.String(100))
     situacao = db.Column(db.String(100))
+    data_cadastro = db.Column(db.String(30))
+    hora_cadastro = db.Column(db.String(30))
     escola_id = db.Column(db.Integer, db.ForeignKey('escola.id'), nullable=False)
     turma_id = db.Column(db.Integer, db.ForeignKey('turma.id'), nullable=False)
     turma = db.relationship('Turma', backref=db.backref('alunos', lazy=True))
@@ -285,10 +295,11 @@ def get_usuarios():
     usuarios_json = [{
         'nome': usuario.name,
         'matricula': usuario.matricula,
-        'cargo': usuario.cargo,
+        'nivel': usuario.nivel_acesso,
         'cadastro': usuario.data,
         'trabalho': usuario.local_trabalho,
-        'status': usuario.situacao
+        'status': usuario.situacao,
+        'id': usuario._id
     } for usuario in usuarios]
 
     return jsonify(usuarios_json)
@@ -328,6 +339,7 @@ def cadastro():
             usuario = request.form["cd_user_usuario"]
             trabalho = request.form["cd_user_trabalho"]
             cargo = request.form["cd_user_cargo"]
+            nivel_acesso = request.form["cd_user_nivel_acesso"]
             senha = request.form["cd_user_senha"]
             rua = request.form["cd_user_rua"]
             numero = request.form["cd_user_numero"]
@@ -348,7 +360,7 @@ def cadastro():
                     hora_atual = datetime.now().strftime('%H:%M:%S')
 
                     # Crie um novo usuário com os dados fornecidos
-                    usr = users(name=nome, telefone=telefone, email=email, senha=senha, data=data_atual, hora=hora_atual, genero=genero, cpf=cpf, data_nascimento=data_nasc, matricula=matricula, usuario=usuario, lotacao="Secretaria Municipal de Educação", local_trabalho=trabalho, situacao="Ativo", cargo=cargo, logradouro=rua, numero=numero, bairro=bairro, cidade=cidade, estado=estado, cep=cep)
+                    usr = users(name=nome, telefone=telefone, email=email, senha=senha, data=data_atual, hora=hora_atual, genero=genero, cpf=cpf, data_nascimento=data_nasc, matricula=matricula, usuario=usuario, lotacao="Secretaria Municipal de Educação", local_trabalho=trabalho, situacao="Ativo", nivel_acesso=nivel_acesso, cargo=cargo, logradouro=rua, numero=numero, bairro=bairro, cidade=cidade, estado=estado, cep=cep)
                     db.session.add(usr)
                     db.session.commit()
                     flash("Cadastrado com Sucesso!", "success")
@@ -370,6 +382,10 @@ def cadastro():
 def cadastro_aluno():
     if "user_id" in session:
         if request.method == "POST":
+           # Obtém a data e hora atuais
+            data_cadastro = datetime.now().strftime('%d/%m/%Y')
+            hora_cadastro = datetime.now().strftime('%H:%M:%S')
+
             nome = request.form["cd_aluno_nome"]
             telefone = request.form["cd_aluno_telefone"]
             genero = request.form["cd_aluno_genero"]
@@ -401,7 +417,7 @@ def cadastro_aluno():
             cep = request.form["cd_aluno_cep"]
 
             # Criar um novo aluno com os dados fornecidos
-            novo_aluno = Aluno(nome=nome, telefone=telefone, genero=genero, ra=ra, cpf=cpf, email=email, data_nascimento=data_nascimento, responsavel1=responsavel1, responsavel2=responsavel2, aluno_nee=aluno_nee, auxilio=auxilio, remedio_controlado=remedio_controlado, aluno_pcd=pcd, aluno_reforco=reforco , rua=rua, numero=numero, bairro=bairro, cidade=cidade, estado=estado, cep=cep, situacao="ativo", escola_id=escola_id)
+            novo_aluno = Aluno(nome=nome, telefone=telefone, genero=genero, ra=ra, cpf=cpf, email=email, data_nascimento=data_nascimento, responsavel1=responsavel1, responsavel2=responsavel2, aluno_nee=aluno_nee, auxilio=auxilio, remedio_controlado=remedio_controlado, aluno_pcd=pcd, aluno_reforco=reforco , rua=rua, numero=numero, bairro=bairro, cidade=cidade, estado=estado, cep=cep, situacao="Ativo", data_cadastro=data_cadastro, hora_cadastro=hora_cadastro, escola_id=escola_id)
             
             # Buscar as instâncias da turma e série com base nos IDs
             turma = Turma.query.get(turma_id)
@@ -442,7 +458,7 @@ def cadastro_escola():
         if request.method == "POST":
             nome = request.form["cd_escola_nome"]
             telefone = request.form["cd_escola_telefone"]
-            ciclo = request.form["cd_escola_ciclo"]
+            categoria = request.form["cd_escola_categoria"]
             cie = request.form["cd_escola_cie"]
             email = request.form["cd_escola_email"]
             data_criacao = request.form["cd_escola_data_criacao"]
@@ -455,7 +471,7 @@ def cadastro_escola():
             cep = request.form["cd_escola_cep"]
 
             # 1. Crie uma nova entrada na tabela Escola
-            nova_escola = Escola(nome=nome, telefone=telefone, ciclo=ciclo, qnt_alunos=0, situacao="Ativo", codigo=cie, email=email ,data=data_criacao, rua= rua, numero = numero, bairro=bairro, cidade=cidade, estado=estado, cep = cep)
+            nova_escola = Escola(nome=nome, telefone=telefone, categoria=categoria, tipo="", qnt_alunos=0, qnt_funcionarios=0, situacao="Ativo", codigo=cie, email=email ,data=data_criacao, rua= rua, numero = numero, bairro=bairro, cidade=cidade, estado=estado, cep = cep)
             db.session.add(nova_escola)
             db.session.commit()
 
@@ -559,7 +575,7 @@ def cadastro_professor():
             escola = Escola.query.get(escola_id)
 
             # Incrementar o atributo qnt_alunos em 1
-            escola.qnt_alunos += 1
+            escola.qnt_funcionarios += 1
 
             # Associar o aluno à turma e série
             novo_funcionario.turma = turma
@@ -628,7 +644,7 @@ def cadastro_funcionario():
             escola = Escola.query.get(escola_id)
 
             # Incrementar o atributo qnt_alunos em 1
-            escola.qnt_alunos += 1
+            escola.qnt_funcionarios += 1
 
             # Associar o aluno à turma e série
             novo_funcionario.turma = turma
@@ -660,19 +676,35 @@ def login():
             user = request.form["nm"]
             password = request.form["senha"]
             found_user = users.query.filter_by(usuario=user).first()
+
             if found_user:
-                if check_password_hash(found_user.senha, password):
+                # Verifica se a senha fornecida é igual à senha armazenada
+                if bcrypt.checkpw(password.encode('utf-8'), found_user.senha.encode('utf-8')):
+                    # Armazena o ID do usuário na sessão
                     session["user_id"] = found_user._id
+                    
+                    # Captura a data e hora atuais para o histórico de login
+                    now = datetime.now()
+                    login_entry = LoginHistory(
+                        user_id=found_user._id,
+                        login_date=now.strftime("%Y-%m-%d"),
+                        login_time=now.strftime("%H:%M:%S")
+                    )
+                    
+                    # Salva o login no histórico
+                    db.session.add(login_entry)
+                    db.session.commit()
+                    
                     return redirect(url_for("home"))
                 else:
                     flash("Usuário ou senha incorretos. Por favor, verifique suas credenciais.")
                     return redirect(url_for("login"))
             else:
-                flash("Usuário não encontrado. Por favor, Entre em contato com a TI.")
+                flash("Usuário não encontrado. Por favor, entre em contato com a TI.")
                 return redirect(url_for("login"))
         else:
             return render_template("login.html")
-        
+      
 
 @app.route("/user/perfil", methods=["GET"])
 def user():
@@ -710,29 +742,34 @@ def editar():
             found_user.logradouro = request.form["edit_user_rua"]
             found_user.numero = request.form["edit_user_numero"]
             found_user.bairro = request.form["edit_user_bairro"]
-            found_user.cidade= request.form["edit_user_cidade"]
-            found_user.estado= request.form["edit_user_estado"]
+            found_user.cidade = request.form["edit_user_cidade"]
+            found_user.estado = request.form["edit_user_estado"]
             found_user.cep = request.form["edit_user_cep"]
-            
+
             # Se a senha foi fornecida no formulário, atualiza o hash da senha
             senha = request.form["senha"]
             if senha:
-                found_user.senha = generate_password_hash(senha)
-            
+                # Gera o hash da senha usando bcrypt
+                found_user.senha = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+                # Verifica o hash gerado (opcional)
+                senha_valida = bcrypt.checkpw(senha.encode('utf-8'), found_user.senha.encode('utf-8'))
+                print(f"Senha válida? {senha_valida}")
+
             # Salva as alterações no banco de dados
             db.session.commit()
-            
+
             # Atualiza os valores na sessão, se necessário
             session["email"] = found_user.email
             session["telefone"] = found_user.telefone
             session["genero"] = found_user.genero
             session["data_nascimento"] = found_user.data_nascimento
-            session["logradouro"] = found_user.logradouro 
-            session["numero"] = found_user.numero 
-            session["bairro"] = found_user.bairro 
+            session["logradouro"] = found_user.logradouro
+            session["numero"] = found_user.numero
+            session["bairro"] = found_user.bairro
             session["cidade"] = found_user.cidade
             session["estado"] = found_user.estado
-            session["cep"] = found_user.cep 
+            session["cep"] = found_user.cep
 
             flash("Informações do usuário foram salvas com sucesso!")
             
@@ -745,31 +782,164 @@ def editar():
         flash("Você não está logado!")
         return redirect(url_for("login"))
     
-@app.route("/user/alunos/editar/<int:aluno_id>", methods=["POST", "GET"])
+@app.route("/user/alunos/aluno/editar/<int:aluno_id>", methods=["POST", "GET"])
 def editar_aluno(aluno_id):
     if "user_id" in session:
-        found_aluno = users.query.get(aluno_id)
+        # Busca o aluno pelo ID
+        found_aluno = Aluno.query.get(aluno_id)
+        
         if not found_aluno:
             flash("Aluno não encontrado!")
             return redirect(url_for("user"))
 
         if request.method == "POST":
-            found_aluno.email = request.form.get("email")
-            found_aluno.telefone = request.form.get("telefone")
-            # Atualize outros campos conforme necessário
+            # Atualiza os dados do aluno com base no formulário
+            found_aluno.nome = request.form["nome"]
+            found_aluno.telefone = request.form["telefone"]
+            found_aluno.genero = request.form["genero"]
+            found_aluno.ra = request.form["ra"]
+            found_aluno.cpf = request.form["cpf"]
+            found_aluno.email = request.form["email"]
+            found_aluno.data_nascimento = request.form["data_nascimento"]
+            found_aluno.responsavel1 = request.form["responsavel1"]
+            found_aluno.responsavel2 = request.form["responsavel2"]
+            found_aluno.aluno_nee = request.form["aluno_nee"]
+            found_aluno.auxilio = request.form["auxilio"]
+            found_aluno.remedio_controlado = request.form["remedio_controlado"]
+            found_aluno.aluno_pcd = request.form["aluno_pcd"]
+            found_aluno.aluno_reforco = request.form["aluno_reforco"]
+            found_aluno.rua = request.form["rua"]
+            found_aluno.numero = request.form["numero"]
+            found_aluno.bairro = request.form["bairro"]
+            found_aluno.cidade = request.form["cidade"]
+            found_aluno.estado = request.form["estado"]
+            found_aluno.cep = request.form["cep"]
+            found_aluno.situacao = request.form["situacao"]
 
-            senha = request.form.get("senha")
-            if senha:
-                found_aluno.senha = generate_password_hash(senha)
-
+            # Não atualiza os campos de escola, turma, série, período, data e hora de cadastro
+            # (Esses campos são omitidos da atualização)
+            
+            # Salva as alterações no banco de dados
             db.session.commit()
-            flash("Informações do aluno foram salvas com sucesso!")
-            return redirect(url_for("user"))
 
+            flash("Informações do aluno foram salvas com sucesso!")
+            
+             # Redireciona para a página do aluno
+            return redirect(url_for("mostrar_aluno", aluno_id=aluno_id))
+
+        # Se for uma requisição GET, preenche o formulário com os dados do aluno
         return render_template("editar_aluno.html", aluno=found_aluno)
     else:
         flash("Você não está logado!")
         return redirect(url_for("login"))
+    
+@app.route("/user/alunos/aluno/<int:aluno_id>", methods=["GET"])
+def mostrar_aluno(aluno_id):
+    if "user_id" in session:
+        # Busca o aluno pelo ID
+        aluno = Aluno.query.get(aluno_id)
+        
+        if not aluno:
+            flash("Aluno não encontrado!")
+            return redirect(url_for("user"))
+        
+        # Renderiza o template com os dados do aluno
+        return render_template("mostrar_aluno.html", aluno=aluno)
+    else:
+        flash("Você não está logado!")
+        return redirect(url_for("login"))
+    
+@app.route("/user/usuarios/usuario/<int:usuario_id>", methods=["GET"])
+def mostrar_usuario(usuario_id):
+    if "user_id" in session:
+        # Obtém o ID do usuário logado
+        user_id_logado = session["user_id"]
+
+        if user_id_logado == usuario_id:
+                    # Redireciona para o próprio perfil, se não for o mesmo usuário
+                    flash("Você só pode acessar o seu próprio perfil!")
+                    return redirect(url_for("user"))
+
+        # Busca o aluno pelo ID
+        usuario= users.query.get(usuario_id)
+        
+        if not usuario:
+            flash("Usuario não encontrado!")
+            return redirect(url_for("user"))
+        
+        # Busca o último acesso do usuário na tabela LoginHistory
+        ultimo_acesso = LoginHistory.query.filter_by(user_id=usuario_id).order_by(LoginHistory.login_date.desc(), LoginHistory.login_time.desc()).first()
+        
+        # Renderiza o template com os dados do aluno
+        return render_template("mostrar_usuario.html", usuario=usuario, ultimo_acesso=ultimo_acesso)
+    else:
+        flash("Você não está logado!")
+        return redirect(url_for("login"))
+    
+@app.route("/user/usuarios/usuario/editar/<int:usuario_id>", methods=["POST", "GET"])
+def editar_usuario(usuario_id):
+    if "user_id" in session:
+        # Busca o usuário pelo ID
+        usuario = users.query.get(usuario_id)
+        
+        if not usuario:
+            flash("Usuário não encontrado!")
+            return redirect(url_for("user"))
+        
+        if request.method == "POST":
+            # Atualiza os dados do usuário com base no formulário
+            usuario.name = request.form["nome"]
+            usuario.telefone = request.form["telefone"]
+            usuario.genero = request.form["genero"]
+            usuario.cpf = request.form["cpf"]
+            usuario.email = request.form["email"]
+            usuario.data_nascimento = request.form["data_nascimento"]
+            usuario.matricula = request.form["matricula"]
+            usuario.usuario = request.form["usuario"]
+            usuario.lotacao = request.form["lotacao"]
+            usuario.cargo = request.form["cargo"]
+            usuario.local_trabalho = request.form["local_trabalho"]
+            usuario.logradouro = request.form["logradouro"]
+            usuario.numero = request.form["numero"]
+            usuario.bairro = request.form["bairro"]
+            usuario.cidade = request.form["cidade"]
+            usuario.estado = request.form["estado"]
+            usuario.cep = request.form["cep"]
+            usuario.situacao = request.form["situacao"]
+            usuario.nivel_acesso = request.form["nivel_acesso"]
+
+            # Se a senha foi fornecida no formulário, atualiza o hash da senha
+            senha = request.form.get("senha")
+            if senha:
+                # Gera o hash da senha usando bcrypt
+                usuario.senha = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+            # Salva as alterações no banco de dados
+            db.session.commit()
+
+            # Atualiza os valores na sessão, se necessário
+            session["email"] = usuario.email
+            session["telefone"] = usuario.telefone
+            session["genero"] = usuario.genero
+            session["data_nascimento"] = usuario.data_nascimento
+            session["logradouro"] = usuario.logradouro
+            session["numero"] = usuario.numero
+            session["bairro"] = usuario.bairro
+            session["cidade"] = usuario.cidade
+            session["estado"] = usuario.estado
+            session["cep"] = usuario.cep
+
+            flash("Informações do usuário foram salvas com sucesso!")
+            
+            # Redireciona para a página do usuário
+            return redirect(url_for("mostrar_usuario", usuario_id=usuario_id))
+
+        # Se for uma requisição GET, preenche o formulário com os dados do usuário
+        return render_template("editar_usuario.html", usuario=usuario)
+    else:
+        flash("Você não está logado!")
+        return redirect(url_for("login"))
+    
     
 @app.route("/user/logout")
 def logout():
@@ -780,18 +950,10 @@ def logout():
 @app.route("/gerar_pdf/<int:aluno_id>", methods=["GET"])
 def gerar_pdf(aluno_id):
     if "user_id" in session:
-        try:
-            # Configurar o idioma para português
-            locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
-        except locale.Error:
-            # Se falhar, pode tentar um locale genérico ou tratar a formatação de data manualmente
-            locale.setlocale(locale.LC_TIME, 'pt_BR')
-
+        # Configurar o idioma para português
+        locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
         # Consulta o usuário no banco de dados
         user = db.session.get(Aluno, aluno_id)
-        
-        if not user:
-            return "Usuário não encontrado", 404
 
         # Verificar o período do aluno
         periodo_aluno = user.periodo.nome
@@ -802,35 +964,79 @@ def gerar_pdf(aluno_id):
             horario_periodo = '13:00h às 17:30h'
         else:  # Noite
             horario_periodo = '18:30h às 22:00h'
+        
+        user.data_nascimento = datetime.strptime(user.data_nascimento, "%Y-%m-%d")
 
         # Formatar a data de nascimento no formato desejado
-        user.data_nascimento = datetime.strptime(user.data_nascimento, "%Y-%m-%d").strftime("%d/%m/%Y")
+        user.data_nascimento = user.data_nascimento.strftime("%d/%m/%Y")
 
-        # Obter a data atual formatada
+        # Obter a data atual
         data_atual = datetime.now().strftime("%d de %B de %Y").capitalize()
 
-        # Renderiza o template HTML com os dados do usuário
-        html_content = render_template("declaracao.html", user=user, data_atual=data_atual, horario_periodo=horario_periodo)
+        if user:
+            # Renderiza o template HTML com os dados do usuário
+            html_content = render_template("declaracao.html", user=user, data_atual=data_atual, horario_periodo=horario_periodo)
 
-        # Cria um novo documento PDF
-        doc = fitz.Document()
+            # Cria um novo documento PDF
+            doc = fitz.Document()
 
-        # Adiciona uma nova página ao PDF
-        page = doc.new_page()
-        rect = page.rect + (36, 36, -36, -36)
+            # Adiciona uma nova página
+            page = doc.new_page()
+            rect = page.rect + (36, 36, -36, -36)
 
-        # Insere o HTML na página do PDF
-        page.insert_htmlbox(rect, html_content, archive=fitz.Archive("."))
+            # Insere o HTML modificado na página
+            page.insert_htmlbox(rect, html_content, archive=fitz.Archive("."))
 
-        # Salva o PDF em memória
-        pdf_buffer = BytesIO()
-        doc.save(pdf_buffer)
-        pdf_buffer.seek(0)
+            # Caminho para salvar o PDF (na pasta raiz do projeto)
+            pdf_filename = f'declaracao_.pdf'
 
-        # Retorna o arquivo PDF gerado sem download
-        return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=False, download_name="declaracao_.pdf")
+            # Salva o PDF
+            doc.ez_save(pdf_filename)
+
+            # Retorna o arquivo PDF gerado sem download
+            return send_file(pdf_filename, mimetype='application/pdf')
+        else:
+            return "Usuário não encontrado", 404
     else:
         return "Você não está logado!", 401
+    
+##verificar
+##API USUARIOS
+@app.route('/api/aluno/<int:aluno_id>', methods=['GET'])
+def get_aluno(aluno_id):
+    # Configurar o idioma para português
+    locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+    # Consulta o usuário no banco de dados
+    user = db.session.get(Aluno, aluno_id)
+
+    # Formatar a data de nascimento
+    user.data_nascimento = datetime.strptime(user.data_nascimento, "%Y-%m-%d").strftime("%d/%m/%Y")
+    data_atual = datetime.now().strftime("%d de %B de %Y").capitalize()
+
+    # Converte os usuários para um formato JSON
+    aluno_json = [{
+        "nome": user.nome,
+        "ra": user.ra,
+        "data_nascimento": user.data_nascimento,
+        "cidade": user.cidade,
+        "estado": user.estado,
+        "escola": user.escola.nome,
+        "serie": user.serie.nome,
+        "turma": user.turma.nome,
+        "periodo": user.periodo.nome,
+        "data_atual": data_atual
+    }]
+
+    response = app.response_class(
+        response=json.dumps(aluno_json, ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
+
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    return response
+
+
 
 @app.route("/gerar_pdf_branco", methods=["GET"])
 def gerar_pdf_branco():

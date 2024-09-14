@@ -44,15 +44,30 @@ var usuarios = [];
                 row.innerHTML = "<td><input type='checkbox'></td>" +
                     "<td>" + usuario.nome + "</td>" +
                     "<td>" + usuario.matricula + "</td>" +
-                    "<td>" + usuario.cargo + "</td>" +
+                    "<td>" + usuario.nivel + "</td>" +
                     "<td>" + usuario.cadastro + "</td>" +
                     "<td>" + usuario.trabalho + "</td>" +
                     "<td>" + usuario.status + "</td>" +
-                    "<td><span class='material-symbols-outlined'>edit</span></td>";
+                    "<td><span class='material-symbols-outlined btn_editar' data-usuario-id='" + usuario.id + "'>edit</span></td>";
                 corpoTabela.appendChild(row);
             }
 
             document.getElementById("quantidadeUsuarios").innerText = "Quantidade de Usuários: " + totalUsuarios;
+
+            editarUsuario();
+        }
+
+        function editarUsuario() {
+            document.querySelectorAll('.btn_editar').forEach(function(btn) {
+                btn.addEventListener('click', function(event) {
+                    event.preventDefault();  // Prevent default button behavior
+        
+                    const usuarioId = btn.getAttribute('data-usuario-id'); 
+        
+                    // Redirect to the edit page with the user's ID
+                    window.location.href = `/user/usuarios/usuario/${usuarioId}`;
+                });
+            });
         }
 
         function atualizarPaginacao(totalRows) {

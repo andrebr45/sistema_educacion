@@ -66,12 +66,12 @@ td {
 }
 #tabelaUsuarios th:nth-child(1){
 	border-top-left-radius: 15px;
-	border: none;
+	border: 1px solid #eee ;
 	
 }
 #tabelaUsuarios th:nth-child(8){
 	border-top-right-radius: 15px;
-	border: none;
+	border: 1px solid #eee ;
 }
 #tabelaUsuarios td:nth-child(1) {
 		text-align: center;
@@ -195,5 +195,8 @@ margin-bottom:auto;}
 }
 #filtroOpcao{
 	width: 173px;
+}
+.btn_editar{
+	cursor: pointer;
 }
  

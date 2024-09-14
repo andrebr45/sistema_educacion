@@ -13,3 +13,8 @@ arquivos
 requirements.txt - colocar bibliotecas
 Procfile - web: python app.py
 https://www.youtube.com/watch?v=LGkj6xA5bUc
+
+banco mysql
+heroku addons:create cleardb:ignite
+heroku addons:create jawsdb:kitefin
+heroku config --json | ConvertFrom-Json | Select-Object -Property JAWSDB_URL    

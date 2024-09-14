@@ -133,7 +133,7 @@
                     const alunoId = btn.getAttribute('data-aluno-id'); 
     
                     // Redireciona para a página de edição com o ID do aluno
-                    window.location.href = `/user/alunos/editar/${alunoId}`;
+                    window.location.href = `/user/alunos/aluno/${alunoId}`;
                 });
             });
         }
