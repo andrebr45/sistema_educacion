@@ -8,6 +8,7 @@ import fitz
 import locale
 import bcrypt
 import json
+from io import BytesIO
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.secret_key = "hello"
@@ -947,12 +948,12 @@ def logout():
     session.pop("user_id", None)
     return redirect(url_for("login"))
 
-@app.route("/gerar_pdf/<int:aluno_id>", methods=["GET"])
+@app.route('/user/alunos/gerar_pdf/<int:aluno_id>', methods=['GET'])
 def gerar_pdf(aluno_id):
     if "user_id" in session:
         # Configurar o idioma para português
-        locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
-        # Consulta o usuário no banco de dados
+        #locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+        # Consulta o aluno no banco de dados
         user = db.session.get(Aluno, aluno_id)
 
         # Verificar o período do aluno
@@ -964,21 +965,27 @@ def gerar_pdf(aluno_id):
             horario_periodo = '13:00h às 17:30h'
         else:  # Noite
             horario_periodo = '18:30h às 22:00h'
-        
+
+        # Converter a data de nascimento
         user.data_nascimento = datetime.strptime(user.data_nascimento, "%Y-%m-%d")
 
         # Formatar a data de nascimento no formato desejado
         user.data_nascimento = user.data_nascimento.strftime("%d/%m/%Y")
 
         # Obter a data atual
-        data_atual = datetime.now().strftime("%d de %B de %Y").capitalize()
+        data_atual = datetime.now().strftime("%d/%m/%Y")
+        ## Obter a data atual
+        #data_atual = datetime.now().strftime("%d de %B de %Y").capitalize()
 
         if user:
-            # Renderiza o template HTML com os dados do usuário
-            html_content = render_template("declaracao.html", user=user, data_atual=data_atual, horario_periodo=horario_periodo)
+            # Renderiza o template HTML com os dados do aluno e a data atual
+            html_content = render_template("declaracao.html", user=user, horario_periodo=horario_periodo, data_atual=data_atual)
+
+            # Cria um buffer de memória
+            pdf_buffer = BytesIO()
 
             # Cria um novo documento PDF
-            doc = fitz.Document()
+            doc = fitz.open()
 
             # Adiciona uma nova página
             page = doc.new_page()
@@ -987,18 +994,18 @@ def gerar_pdf(aluno_id):
             # Insere o HTML modificado na página
             page.insert_htmlbox(rect, html_content, archive=fitz.Archive("."))
 
-            # Caminho para salvar o PDF (na pasta raiz do projeto)
-            pdf_filename = f'declaracao_.pdf'
+            # Salva o PDF diretamente no buffer de memória
+            doc.save(pdf_buffer)
 
-            # Salva o PDF
-            doc.ez_save(pdf_filename)
+            # Move o cursor para o início do buffer
+            pdf_buffer.seek(0)
 
-            # Retorna o arquivo PDF gerado sem download
-            return send_file(pdf_filename, mimetype='application/pdf')
+            # Retorna o arquivo PDF gerado sem salvá-lo no disco
+            return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=False)
         else:
             return "Usuário não encontrado", 404
     else:
-        return "Você não está logado!", 401
+        return redirect(url_for("login"))
     
 ##verificar
 ##API USUARIOS

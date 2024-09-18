@@ -65,7 +65,7 @@
             // Atualizar quantidade de alunos
             document.getElementById("quantidadeAlunos").innerText = "Quantidade de Alunos: " + totalAlunos;
     
-            adicionarEventListenersPDF();
+            gerarAlunoPDF();
             editarAluno();
         }
     
@@ -94,36 +94,21 @@
             currentPage = 1; // Define currentPage como 1 antes de exibir os resultados da consulta
             mostrarAlunos(); // Chama mostrarAlunos() após definir currentPage
         }
+
+        function gerarAlunoPDF() {
+          document.querySelectorAll('.btn_pdf').forEach(function(btn) {
+              btn.addEventListener('click', function(event) {
+                  event.preventDefault(); // Evita o comportamento padrão do botão
+      
+                  const alunoId = btn.getAttribute('data-id'); 
+      
+                  // Abre uma nova guia com a URL para gerar o PDF
+                  window.open(`/user/alunos/gerar_pdf/${alunoId}`, '_blank');
+              });
+          });
+      }
     
-        function adicionarEventListenersPDF() {
-            document.querySelectorAll('.btn_pdf').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var aluno_id = this.getAttribute('data-id');
-                    fetch('/gerar_pdf/' + aluno_id)
-                        .then(response => {
-                            if (response.status === 401) {
-                                // Redirecionar para a página de login se o usuário não estiver logado
-                                window.location.href = '/';
-                            } else if (response.ok) {
-                                return response.blob();
-                            } else {
-                                throw new Error('Erro ao gerar o PDF');
-                            }
-                        })
-                        .then(blob => {
-                            if (blob) {
-                                const url = window.URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.target = '_blank'; // Abre em uma nova aba
-                                a.click();
-                                window.URL.revokeObjectURL(url); // Libera a memória
-                            }
-                        })
-                        .catch(error => console.error('Error:', error));
-                });
-            });
-        }
+        
     
         function editarAluno() {
             document.querySelectorAll('.btn_editar').forEach(function(btn) {

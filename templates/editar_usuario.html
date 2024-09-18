@@ -103,10 +103,10 @@
                         <label>Nível de Acesso</label>
                         <select name="nivel_acesso" type="text">
                             <option disabled>Selecionar Nível</option>
-                            <option {% if usuario.nivel_acesso == 'Basico' %}selected{% endif %}>Basico</option>
-                            <option {% if usuario.nivel_acesso == 'Avancado' %}selected{% endif %}>Avançado</option>
-                            <option {% if usuario.nivel_acesso == 'Completo' %}selected{% endif %}>Completo</option>
-                            <option {% if usuario.nivel_acesso == 'Administrador' %}selected{% endif %}>Administrador</option>
+                            <option value="Básico" {% if usuario.nivel_acesso == 'Básico' %}selected{% endif %}>Básico</option>
+                            <option value="Avançado" {% if usuario.nivel_acesso == 'Avançado' %}selected{% endif %}>Avançado</option>
+                            <option value="Completo" {% if usuario.nivel_acesso == 'Completo' %}selected{% endif %}>Completo</option>
+                            <option value="Administrador" {% if usuario.nivel_acesso == 'Administrador' %}selected{% endif %}>Administrador</option>
                         </select>
                     </div>
                 </div>
