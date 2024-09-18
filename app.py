@@ -952,7 +952,7 @@ def logout():
 def gerar_pdf(aluno_id):
     if "user_id" in session:
         # Configurar o idioma para português
-        #locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+        locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
         # Consulta o aluno no banco de dados
         user = db.session.get(Aluno, aluno_id)
 
@@ -973,9 +973,9 @@ def gerar_pdf(aluno_id):
         user.data_nascimento = user.data_nascimento.strftime("%d/%m/%Y")
 
         # Obter a data atual
-        data_atual = datetime.now().strftime("%d/%m/%Y")
+        #data_atual = datetime.now().strftime("%d/%m/%Y")
         ## Obter a data atual
-        #data_atual = datetime.now().strftime("%d de %B de %Y").capitalize()
+        data_atual = datetime.now().strftime("%d de %B de %Y").capitalize()
 
         if user:
             # Renderiza o template HTML com os dados do aluno e a data atual
