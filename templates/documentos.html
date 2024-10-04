@@ -20,87 +20,107 @@
             <i class='material-symbols-outlined'>picture_as_pdf</i>
             <span class="text">
                 <h4 id="h4">Declaração de comprovante escolar</h4>
-                <a id="gerarPDFBranco" class="gerarpdfbranco" href="#">Gerar</a>
+                <a id="gerarComprovanteEscolarPDF" class="gerarpdfbranco">Gerar</a>
             </span>
         </li>
         <li>
             <i class='material-symbols-outlined'>picture_as_pdf</i>
             <span class="text">
                 <h4 id="h4">Declaração de Transferência</h4>
-                <a id="gerarPDFtransferencia" class="gerarpdfbranco" href="#">Gerar</a>
+                <a id="gerarTransferenciaPDF" class="gerarpdfbranco">Gerar</a>
             </span>
         </li>
         <li>
             <i class='material-symbols-outlined'>picture_as_pdf</i>
             <span class="text">
                 <h4 id="h4">Declaração de Vaga</h4>
-                <a id="gerarPDFvaga" class="gerarpdfbranco" href="#">Gerar</a>
+                <a id="gerarSolicitacaoVagaPDF" class="gerarpdfbranco">Gerar</a>
             </span>
         </li>
         <li>
             <i class='material-symbols-outlined'>picture_as_pdf</i>
             <span class="text">
                 <h4 id="h4">Declaração de Conclusão</h4>
-                <a id="gerarPDFConclusao" class="gerarpdfbranco" href="#">Gerar</a>
+                <a id="gerarConclusaoEscolarPDF" class="gerarpdfbranco">Gerar</a>
             </span>
         </li>
     </ul>
 </div>
 <script>
-    document.getElementById('gerarPDFBranco').addEventListener('click', function() {
-        fetch('/gerar_pdf_branco')
-            .then(response => response.blob())
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.target = '_blank';
-                a.click();
-                window.URL.revokeObjectURL(url);
+    
+    document.getElementById('gerarComprovanteEscolarPDF').addEventListener('click', function(event) {
+        event.preventDefault();  // Impede o comportamento padrão do link
+
+        // Verifica se o usuário está logado
+        fetch('/check_user_logged_in')
+            .then(response => response.json())
+            .then(data => {
+                if (data.logged_in) {
+                    // Se o usuário estiver logado, abre uma nova aba para gerar o PDF
+                    window.open('/documentos/comprovante_escolar', '_blank');
+                } else {
+                    // Caso contrário, redireciona para a página de login
+                    window.location.href = '/';
+                }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => console.error('Erro ao verificar autenticação:', error));
     });
     
-    document.getElementById('gerarPDFtransferencia').addEventListener('click', function() {
-        fetch('/gerar_pdf_declaracao_transferencia')
-            .then(response => response.blob())
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.target = '_blank';
-                a.click();
-                window.URL.revokeObjectURL(url);
+  
+    document.getElementById('gerarTransferenciaPDF').addEventListener('click', function(event) {
+        event.preventDefault();  // Impede o comportamento padrão do link
+
+        // Verifica se o usuário está logado
+        fetch('/check_user_logged_in')
+            .then(response => response.json())
+            .then(data => {
+                if (data.logged_in) {
+                    // Se o usuário estiver logado, abre uma nova aba para gerar o PDF
+                    window.open('/documentos/declaracao_transferencia', '_blank');
+                } else {
+                    // Caso contrário, redireciona para a página de login
+                    window.location.href = '/';
+                }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => console.error('Erro ao verificar autenticação:', error));
     });
     
-    document.getElementById('gerarPDFvaga').addEventListener('click', function() {
-        fetch('/gerar_pdf_solicitacao_vaga')
-            .then(response => response.blob())
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.target = '_blank';
-                a.click();
-                window.URL.revokeObjectURL(url);
+ 
+    document.getElementById('gerarSolicitacaoVagaPDF').addEventListener('click', function(event) {
+        event.preventDefault();  // Impede o comportamento padrão do link
+
+        // Verifica se o usuário está logado
+        fetch('/check_user_logged_in')
+            .then(response => response.json())
+            .then(data => {
+                if (data.logged_in) {
+                    // Se o usuário estiver logado, abre uma nova aba para gerar o PDF
+                    window.open('/documentos/solicitacao_vaga', '_blank');
+                } else {
+                    // Caso contrário, redireciona para a página de login
+                    window.location.href = '/';
+                }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => console.error('Erro ao verificar autenticação:', error));
     });
     
-    document.getElementById('gerarPDFConclusao').addEventListener('click', function() {
-        fetch('/gerar_pdf_conclusao_escolar')
-            .then(response => response.blob())
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.target = '_blank';
-                a.click();
-                window.URL.revokeObjectURL(url);
+    
+    document.getElementById('gerarConclusaoEscolarPDF').addEventListener('click', function(event) {
+        event.preventDefault();  // Impede o comportamento padrão do link
+
+        // Verifica se o usuário está logado
+        fetch('/check_user_logged_in')
+            .then(response => response.json())
+            .then(data => {
+                if (data.logged_in) {
+                    // Se o usuário estiver logado, abre uma nova aba para gerar o PDF
+                    window.open('/documentos/conclusao_escolar', '_blank');
+                } else {
+                    // Caso contrário, redireciona para a página de login
+                    window.location.href = '/';
+                }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => console.error('Erro ao verificar autenticação:', error));
     });
 </script>
     

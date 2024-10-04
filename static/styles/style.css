@@ -327,7 +327,7 @@ body {background: var(--grey);}
 /* Estilo para o menu suspenso */
 #dropdown-menu{
     display: none;
-    position: fixed;
+    /* position: fixed;*/
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -339,6 +339,8 @@ body {background: var(--grey);}
     margin-right: 5px;
     top: 20; /* Define a posição do menu no final da tela */
     right: 0; /* Opcional: você pode usar left: 0; para alinhar à esquerda */
+    z-index: 2;
+    position: absolute;
 }
 
 #dropdown-menu a {

@@ -34,7 +34,7 @@
                         <div class="input-field">
                             <label>Gênero</label>
                             <select name="cd_func_genero" type="text" placeholder="Gênero">
-                                <option disabled selected>Selecionar Gênero</option>
+                                <option value="Não Alocado">Selecionar Gênero</option>
                                 <option value="Masculino">Masculino</option>
                                 <option value="Feminino">Feminino</option>
                                 <option value="Outros">Outros</option>
@@ -63,43 +63,63 @@
                             <input type="text" name="cd_func_matricula" placeholder="Matrícula">
                         </div>
                         <div class="input-field">
-                            <label>Lotação</label>
-                            <input type="text" name="cd_func_lotacao" placeholder="Lotação">
+                            <label>Local de Cargo</label>
+                            <select id="cd_func_local_trabalho" name="cd_func_local_trabalho" type="text" required>
+                                <option value="Não Alocado">Selecionar Local de Cargo</option>
+                                <option value="Escola">Escola</option>
+                                <option value="Secretaria de Educação">Secretaria de Educação</option>
+                            </select>
                         </div>
                         <div class="input-field">
                             <label>Cargo</label>
-                            <input type="text" name="cd_func_cargo" placeholder="Cargo">
+                            <select id="cd_func_cargo" name="cd_func_cargo" type="text" required>
+                                <option value="Não Alocado" selected>Selecionar Cargo</option>
+                            </select>
                         </div>
-                    </div>
+                </div>
                 <div class="details ID">
-                    <span class="title">Local de Trabalho</span>
+                    <span class="title" id="escola_sede">Sala de Aula?
+                        <ul class="list" id="escolha_sede">
+                            <li class="list-item">
+                                <input type="radio" class="hidden-box" name="escola_sede" value="Sim" id="tem_escola_sim" checked />
+                                <label for="tem_escola_sim">
+                                    <span class="check--label-text">Sim</span>
+                                </label>
+                            </li>
+                            <li class="list-item">
+                                <input type="radio" class="hidden-box" name="escola_sede" value="Não" id="tem_escola_nao" />
+                                <label for="tem_escola_nao">
+                                    <span class="check--label-text">Não</span>
+                                </label>
+                            </li>
+                        </ul>
+                </span>
                     <div class="fields">
                         <div class="input-field">
-                            <label for="inputEscolaForm">Escola</label>
+                            <label for="inputEscolaForm">Escola ou Sede</label>
                             <select id="inputEscolaForm" name="escola" required onchange="getSeries()">
-                                <option value="" disabled selected>Selecione a escola</option>
+                                <option value="" disabled selected>Selecione o local</option>
                                 {% for escola in escolas %}
                                     <option value="{{ escola.id }}">{{ escola.nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="input-field">
+                        <div class="input-field escola">
                             <label for="inputSerieForm">Série</label>
                             <select id="inputSerieForm" name="serie">
-                                <option value="" selected>Selecione a série</option>
+                                <option value="" disabled selected>Selecione a série</option>
                             </select>
                         </div>
-                        <div class="input-field">
-                            <label>Turma</label>
-                            <select id="inputTurmaForm" name="cd_func_turma" type="text">
-                                <option disabled selected>Selecionar</option>
-                                <!-- Opções de turmas serão adicionadas dinamicamente aqui -->
+                        <div class="input-field escola">
+                            <label for="inputTurmaForm">Turma</label>
+                            <select id="inputTurmaForm" name="cd_func_turma">
+                                <option disabled selected>Selecionar a turma</option>
                             </select>
                         </div>
                         <div class="input-field">
                             <label for="inputPeriodoForm">Período</label>
                             <select id="inputPeriodoForm" name="periodo" required>
-                                <option disabled selected>Selecionar Gênero</option>
+                                <option value="Não Alocado">Selecionar Período</option>
                                 <option value="Manhã">Manhã</option>
                                 <option value="Tarde">Tarde</option>
                                 <option value="Expediente">Expediente</option>
@@ -108,7 +128,7 @@
                         <div class="input-field">
                             <label>É efetivo ?</label>
                             <select name="cd_func_efetivo" type="text" required>
-                                <option disabled selected>Selecionar</option>
+                                <option value="Não Alocado">Selecionar</option>
                                 <option value="Sim">Sim</option>
                                 <option value="Não">Não</option>
                             </select>
@@ -116,7 +136,7 @@
                         <div class="input-field">
                             <label>Formação ?</label>
                             <select name="cd_func_formacao" type="text" required>
-                                <option disabled selected>Selecionar</option>
+                                <option value="Não Alocado">Selecionar</option>
                                 <option value="Ensino Fundamental">Ensino Fundamental</option>
                                 <option value="Ensino Médio">Ensino Médio</option>
                                 <option value="Ensino Superior">Ensino Superior</option>

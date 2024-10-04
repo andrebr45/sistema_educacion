@@ -42,6 +42,7 @@
             <select id="filtroOpcao">
               <option value="1">Filtrar por Nome</option>
               <option value="2">Filtrar por Matrícula</option>
+              <option value="3">Filtrar por CPF</option>
             </select>
           </div>
         <div id="pesquisa-funcionario">
@@ -63,9 +64,10 @@
             <th><input type='checkbox' id='checkAll'></th>
             <th>Nome</th>
             <th>Matrícula</th>
+            <th>CPF</th>
             <th>Telefone</th>
             <th>Cargo</th>
-            <th>Escola</th>
+            <th>Local</th>
             <th>Status</th>    
             <th>Ação</th>
 
@@ -86,111 +88,10 @@
         <div class="pagination" id="paginacao">
             <!-- Aqui serão inseridos os links de paginação -->
         </div>
-    </div>
-
-    <script>
-        // Lista de alunos (substitua essa lista com seus dados reais)
-     
-           // Lista de alunos (substitua essa lista com seus dados reais)
-        var funcionarios = [
-            {% for funcionario in funcionarios %}
-                { 
-                    nome: "{{ funcionario.nome }}", 
-                    codigo: "{{ funcionario.matricula }}", 
-                    ciclo: "{{ funcionario.telefone}}",
-                    telefone: "{{ funcionario.cargo}}",  
-                    qnt_alunos: "{{ funcionario.escola.nome }}", 
-                    situacao: "{{ funcionario.situacao }}"
-                },
-            {% endfor %}
-        ];
-
-        var currentPage = 1;
-        var rowsPerPage = 10;
-
-        // Função para exibir os alunos na tabela
-        // Função para exibir os alunos na tabela
-        // Função para exibir os alunos na tabela
-        function mostrarFuncionarios() {
-            var corpoTabela = document.getElementById("corpoTabela");
-            var filtroOpcao = document.getElementById("filtroOpcao").value;
-            var input = document.getElementById("myInput").value.toUpperCase();
-
-            // Limpar conteúdo anterior
-            corpoTabela.innerHTML = "";
-
-            var totalFuncionarios = 0;
-
-            // Exibir os alunos que atendem ao critério de filtro
-            var filteredFuncionarios = funcionarios.filter(function(funcionario) {
-                var incluirFuncionario = false;
-                if (filtroOpcao === "1") {
-                    if (funcionario.nome.toUpperCase().indexOf(input) > -1) {
-                        incluirFuncionario = true;
-                    }
-                } else if (filtroOpcao === "2") {
-                    if (funcionario.codigo.toUpperCase().indexOf(input) > -1) {
-                        incluirFuncionario = true;
-                    }
-                }
-                if (incluirFuncionario) totalFuncionarios++;
-                return incluirFuncionario;
-            });
-
-            // Atualizar links de paginação
-            atualizarPaginacao(filteredFuncionarios.length);
-
-            // Exibir alunos na tabela considerando a página atual
-            var startIndex = (currentPage - 1) * rowsPerPage;
-            var endIndex = startIndex + rowsPerPage;
-            for (var i = startIndex; i < endIndex && i < filteredFuncionarios.length; i++) {
-                var funcionario = filteredFuncionarios[i];
-                var row = document.createElement("tr");
-                row.innerHTML = "<td><input type='checkbox'></td>" +
-                    "<td>" + funcionario.nome + "</td>" +
-                    "<td>" + funcionario.codigo + "</td>" +
-                    "<td>" + funcionario.ciclo + "</td>" +
-                    "<td>" + funcionario.telefone + "</td>" +
-                    "<td>" + funcionario.qnt_alunos + "</td>" +
-                    "<td>" + funcionario.situacao + "</td>" +
-                    "<td><span class='material-symbols-outlined'>edit</span></td>";
-                corpoTabela.appendChild(row);
-            }
-
-            // Atualizar quantidade de alunos
-            document.getElementById("quantidadeFuncionarios").innerText = "Quantidade de Funcionários: " + totalFuncionarios;
-        }
-
-        // Função para atualizar a exibição da paginação
-        function atualizarPaginacao(totalRows) {
-            var paginacao = document.getElementById("paginacao");
-            var totalPages = Math.ceil(totalRows / rowsPerPage);
-            paginacao.innerHTML = "";
-            for (var i = 1; i <= totalPages; i++) {
-                var link = document.createElement("a");
-                link.href = "#";
-                link.innerText = i;
-                if (i === currentPage) {
-                    link.className = "active";
-                }
-                link.onclick = function() {
-                    currentPage = parseInt(this.innerText);
-                    mostrarFuncionarios(); // Chama mostrarAlunos() ao clicar na página
-                };
-                paginacao.appendChild(link);
-            }
-        }
-
-        // Função para filtrar a tabela
-        function filtrarTabela() {
-            currentPage = 1; // Define currentPage como 1 antes de exibir os resultados da consulta
-            mostrarFuncionarios(); // Chama mostrarAlunos() após definir currentPage
-        }
-
-        // Chamar mostrarAlunos pela primeira vez para exibir a primeira página
-        mostrarFuncionarios();
-            </script>
-        </body>
-        </html>
+    </div>         
+    <!-- Javascript -->
+    <script src="{{ url_for('static', filename='js/funcionarios.js') }}"></script>
+</body>
+</html>
 
 {% endblock %}

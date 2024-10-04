@@ -70,6 +70,25 @@ var usuarios = [];
             });
         }
 
+        // Função para limpar o campo de pesquisa ao trocar o filtro
+        document.getElementById('filtroOpcao').addEventListener('change', function() {
+            var inputPesquisa = document.getElementById('myInput');
+            
+            // Limpar o campo de pesquisa ao trocar o filtro
+            inputPesquisa.value = '';
+
+            // Atualizar o placeholder conforme o filtro selecionado
+            if (this.value == "1") {
+                inputPesquisa.placeholder = "Pesquisar por nome...";
+            } 
+            else if (this.value == "2") {
+                inputPesquisa.placeholder = "Pesquisar por Matrícula...";
+            } 
+            
+            // Atualizar a tabela após mudar o filtro
+            //filtrarTabela();
+        });
+
         function atualizarPaginacao(totalRows) {
             var paginacao = document.getElementById("paginacao");
             var totalPages = Math.ceil(totalRows / rowsPerPage);

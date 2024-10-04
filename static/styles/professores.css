@@ -15,7 +15,7 @@
   }
   
   .navegacao-menu-professores{
-  display: flex; justify-content: space-between; margin-bottom: 15px; margin-left: 25px; margin-right: 25px;
+    display: flex; justify-content: space-between; margin-bottom: 15px; margin-left: 25px; margin-right: 25px; margin-top: 15px;
   }
   #pesquisa-professor{
   display: flex;
@@ -37,30 +37,54 @@
   align-items: center;
   display: flex;
   }
-  #btn-professor{
+#btn-professor{
   background: var(--blue);
   color: var(--light);
   border-radius: 9px;
   padding: 5px;
-  }
-  table { 
+}
+table { 
     width: 100%; 
     border-collapse: collapse; 
-  }
-  /* Zebra striping */
-  tr:nth-of-type(odd) { 
-    background: #eee; 
-  }
-  th { 
-    background: #333; 
-    color: white; 
-    font-weight: bold; 
-  }
-  td, th { 
-    padding: 6px; 
-    border: 1px solid #ccc; 
-    text-align: left; 
-  }
+}
+
+/* Zebra striping */
+tr:nth-of-type(odd) { 
+  background: #eee; 
+}
+th { 
+  background: #333; 
+  color: white; 
+  font-weight: bold;
+  font-size: 15px; 
+  padding: 6px; 
+  border: 1px solid #ccc; 
+  text-align: center; 
+}
+td { 
+  border: 1px solid #ccc; 
+  text-align: left; 
+}
+#tabelaProfessores th:nth-child(1){
+border-top-left-radius: 15px;
+border: 1px solid #eee ;
+
+}
+#tabelaProfessores th:nth-child(9){
+border-top-right-radius: 15px;
+border: 1px solid #eee ;
+}
+#tabelaProfessores td:nth-child(1) {
+  text-align: center;
+}
+#tabelaProfessores td:nth-child(2), #tabelaProfessores td:nth-child(3),
+#tabelaProfessores td:nth-child(4), #tabelaProfessores td:nth-child(5), 
+#tabelaProfessores td:nth-child(6), #tabelaProfessores td:nth-child(7),
+#tabelaProfessores td:nth-child(8), #tabelaProfessores td:nth-child(9) {
+  font-size: 15px;
+  padding: 3px;
+}
+
   /* 
   Max width before this PARTICULAR table gets nasty
   This query will take effect for any screen smaller than 760px
@@ -152,4 +176,7 @@
     }
   #filtroOpcao{
       width: 173px;
+  }
+  .btn_editar{
+    cursor: pointer;
   }

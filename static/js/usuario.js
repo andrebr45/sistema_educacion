@@ -23,6 +23,34 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+function buscarCEP() {
+    let cep = document.getElementById('inputCEPForm').value;
+
+    // Remove caracteres não numéricos (hífen, espaços, etc.)
+    cep = cep.replace(/\D/g, '');
+
+    if (cep.length === 8) {  // Verifica se o CEP possui 8 dígitos
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.erro) {
+                    document.getElementById('logradouro').value = data.logradouro;
+                    document.getElementById('bairro').value = data.bairro;
+                    document.getElementById('cidade').value = data.localidade;
+                    document.getElementById('estado').value = data.uf;
+                } else {
+                    alert('CEP não encontrado!');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar o CEP:', error);
+                alert('Erro ao buscar o CEP.');
+            });
+    } else {
+        alert('CEP inválido. Por favor, insira um CEP com 8 dígitos.');
+    }
+}
+
 function formatarCampo(input, formato) {
     // Obtém o valor atual do input
     var valor = input.value;

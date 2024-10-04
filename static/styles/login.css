@@ -57,9 +57,11 @@ body {
     color: aliceblue;
     width: 100px;
 }
-#esqueceu_senha{
+#campo_esqueceu_senha{
     display: flex;
     justify-content: end;
+}
+#texto_esqueceu_senha{
     text-decoration: none;
     color: var(--blue);
 }
@@ -73,4 +75,7 @@ img{
     display: flex;
     justify-content: center;
     align-items: center;
+}
+#btn_login{
+    cursor: pointer;
 }

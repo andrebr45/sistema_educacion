@@ -103,10 +103,10 @@
                         <label>Nível de Acesso</label>
                         <select name="nivel_acesso" type="text">
                             <option disabled>Selecionar Nível</option>
-                            <option value="Básico" {% if usuario.nivel_acesso == 'Básico' %}selected{% endif %}>Básico</option>
-                            <option value="Avançado" {% if usuario.nivel_acesso == 'Avançado' %}selected{% endif %}>Avançado</option>
-                            <option value="Completo" {% if usuario.nivel_acesso == 'Completo' %}selected{% endif %}>Completo</option>
-                            <option value="Administrador" {% if usuario.nivel_acesso == 'Administrador' %}selected{% endif %}>Administrador</option>
+                            <option {% if usuario.nivel_acesso == 'Basico' %}selected{% endif %}>Basico</option>
+                            <option {% if usuario.nivel_acesso == 'Avancado' %}selected{% endif %}>Avançado</option>
+                            <option {% if usuario.nivel_acesso == 'Completo' %}selected{% endif %}>Completo</option>
+                            <option {% if usuario.nivel_acesso == 'Administrador' %}selected{% endif %}>Administrador</option>
                         </select>
                     </div>
                 </div>
@@ -114,28 +114,28 @@
                     <span class="title">Endereço</span>
                     <div class="fields">
                         <div class="input-field">
+                            <label>CEP</label>
+                            <input id="inputCEPForm" type="text" name="cep" value="{{ usuario.cep }}" onblur="buscarCEP()">
+                        </div>
+                        <div class="input-field">
                             <label>Logradouro</label>
-                            <input type="text" name="logradouro" value="{{ usuario.logradouro }}" required>
+                            <input type="text" id="logradouro" name="logradouro" value="{{ usuario.logradouro }}">
                         </div>
                         <div class="input-field">
                             <label>N°</label>
-                            <input type="text" name="numero" value="{{ usuario.numero }}" required>
+                            <input type="text" name="numero" value="{{ usuario.numero }}">
                         </div>
                         <div class="input-field">
                             <label>Bairro</label>
-                            <input type="text" name="bairro" value="{{ usuario.bairro }}" required>
+                            <input type="text" id="bairro" name="bairro" value="{{ usuario.bairro }}">
                         </div>
                         <div class="input-field">
                             <label>Cidade</label>
-                            <input type="text" name="cidade" value="{{ usuario.cidade }}" required>
+                            <input type="text" id="cidade" name="cidade" value="{{ usuario.cidade }}">
                         </div>
                         <div class="input-field">
                             <label>Estado</label>
-                            <input type="text" name="estado" value="{{ usuario.estado }}" required>
-                        </div>
-                        <div class="input-field">
-                            <label>CEP</label>
-                            <input id="inputCEPForm" type="text" name="cep" value="{{ usuario.cep }}" required>
+                            <input type="text" id="estado" name="estado" value="{{ usuario.estado }}">
                         </div>
                     </div>
                     <br>

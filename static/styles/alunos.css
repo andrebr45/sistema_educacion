@@ -15,7 +15,7 @@
 }
 
 .navegacao-menu-alunos{
-display: flex; justify-content: space-between; margin-bottom: 15px; margin-left: 25px; margin-right: 25px;
+  display: flex; justify-content: space-between; margin-bottom: 15px; margin-left: 25px; margin-right: 25px; margin-top: 15px;
 }
 #pesquisa-aluno{
 display: flex;
@@ -54,13 +54,36 @@ tr:nth-of-type(odd) {
 th { 
   background: #333; 
   color: white; 
-  font-weight: bold; 
-}
-td, th { 
+  font-weight: bold;
+  font-size: 15px; 
   padding: 6px; 
+  border: 1px solid #ccc; 
+  text-align: center; 
+}
+td { 
   border: 1px solid #ccc; 
   text-align: left; 
 }
+
+#tabelaAlunos th:nth-child(1){
+  border-top-left-radius: 15px;
+  border: 1px solid #eee ;
+  
+  }
+  #tabelaAlunos th:nth-child(8){
+  border-top-right-radius: 15px;
+  border: 1px solid #eee ;
+  }
+  #tabelaAlunos td:nth-child(1) {
+    text-align: center;
+  }
+  #tabelaAlunos td:nth-child(2), #tabelaAlunos td:nth-child(3),
+  #tabelaAlunos td:nth-child(4), #tabelaAlunos td:nth-child(5), 
+  #tabelaAlunos td:nth-child(6), #tabelaAlunos td:nth-child(7),
+  #tabelaAlunos td:nth-child(8), #tabelaAlunos td:nth-child(9) {
+    font-size: 15px;
+    padding: 3px;
+  }
 
 
 /* Pagination links */

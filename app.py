@@ -9,6 +9,7 @@ import locale
 import bcrypt
 import json
 from io import BytesIO
+import requests
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.secret_key = "hello"
@@ -197,15 +198,7 @@ class Funcionarios(db.Model):
     add1 = db.Column(db.String(100))
     add2 = db.Column(db.String(100))
     add3 = db.Column(db.String(100))
-
-    escola_id = db.Column(db.Integer, db.ForeignKey('escola.id'), nullable=False)
-    escola = db.relationship('Escola', backref=db.backref('funcionarios', lazy=True))
-    turma_id = db.Column(db.Integer, db.ForeignKey('turma.id'), nullable=True)
-    turma = db.relationship('Turma', backref=db.backref('funcionarios', lazy=True))
-    serie_id = db.Column(db.Integer, db.ForeignKey('serie.id'), nullable=True)
-    serie = db.relationship('Serie', backref=db.backref('funcionarios', lazy=True))
     periodo = db.Column(db.String(100))
-
     rua = db.Column(db.String(100))
     numero = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
@@ -221,6 +214,24 @@ class Funcionarios(db.Model):
     @staticmethod
     def count_professores_funcionarios():
         return Funcionarios.query.filter_by(cargo='Professor').count()
+
+class AlocacaoFuncionario(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    funcionario_id = db.Column(db.Integer, db.ForeignKey('funcionarios.id'), nullable=False)
+    funcionario = db.relationship('Funcionarios', backref=db.backref('alocacoes', lazy=True))
+
+    escola_id = db.Column(db.Integer, db.ForeignKey('escola.id'), nullable=True)
+    escola = db.relationship('Escola', backref=db.backref('alocacoes_funcionarios', lazy=True))
+
+    serie_id = db.Column(db.Integer, db.ForeignKey('serie.id'), nullable=True)
+    serie = db.relationship('Serie', backref=db.backref('alocacoes_funcionarios', lazy=True))
+
+    turma_id = db.Column(db.Integer, db.ForeignKey('turma.id'), nullable=True)
+    turma = db.relationship('Turma', backref=db.backref('alocacoes_funcionarios', lazy=True))
+
+    # Adiciona campos para a data e hora de alocação
+    data_alocacao = db.Column(db.String(10))
+    hora_alocacao = db.Column(db.String(8))
 
 
 @app.route("/user/home")
@@ -247,18 +258,147 @@ def home():
 def professores():
     if "user_id" in session:
         # Consulta todos os professores
-        professores = Funcionarios.query.filter_by(cargo="Professor").all()
-        return render_template("professores.html", professores=professores, current_page='professores')
+        #professores = Funcionarios.query.filter_by(cargo="Professor").all()
+        return render_template("professores.html", current_page='professores')
     else:
         flash("Você não está logado!")
         return redirect(url_for("login"))
 
+@app.route('/api/professores', methods=['GET'])
+def get_professores():
+    # Consulta todos os professores
+    professores = Funcionarios.query.filter_by(cargo="Professor").all()
+
+    # Converte os funcionários para um formato JSON
+    professores_json = []
+
+    for professor in professores:
+        # Consultar a alocação do funcionário
+        alocacao = AlocacaoFuncionario.query.filter_by(funcionario_id=professor.id).first()
+
+        # Preparar as informações de alocação
+        escola_nome = alocacao.escola.nome if alocacao and alocacao.escola else ""
+        serie_nome = alocacao.serie.nome if alocacao and alocacao.serie else ""
+        turma_nome = alocacao.turma.nome if alocacao and alocacao.turma else ""
+
+        # Concatenar série e turma se ambos existirem
+        serie_turma = f"{serie_nome} {turma_nome}".strip() if serie_nome or turma_nome else "Não alocado"
+
+        # Criar o dicionário com as informações do funcionário
+        professor_json = {
+            'nome': professor.nome,
+            'matricula': professor.matricula,
+            'cpf': professor.cpf,
+            'telefone': professor.telefone,
+            'cargo': professor.cargo,
+            'escola': escola_nome if escola_nome else "Não alocado",
+            'serie': serie_turma,
+            'periodo': professor.periodo,
+            'status': professor.situacao,
+            'id': professor.id
+        }
+
+        professores_json.append(professor_json)
+
+    return jsonify(professores_json)
+
+
+@app.route("/user/professores/professor/<int:professor_id>", methods=["GET"])
+def mostrar_professor(professor_id):
+    if "user_id" in session:
+        professor = Funcionarios.query.get(professor_id)
+
+        # Consultar a alocação do funcionário
+        alocacao = AlocacaoFuncionario.query.filter_by(funcionario_id=professor_id).first()
+
+        # Preparar as informações de alocação
+        escola_nome = alocacao.escola.nome if alocacao and alocacao.escola else "Não alocado"
+        serie_nome = alocacao.serie.nome if alocacao and alocacao.serie else "Não alocado"
+        turma_nome = alocacao.turma.nome if alocacao and alocacao.turma else "Não alocado"
+        #serie_turma = f"{serie_nome} {turma_nome}".strip() if serie_nome or turma_nome else "Não alocado"
+
+        # Passar os dados de alocação junto com o funcionário
+        return render_template(
+            "mostrar_professor.html",
+            professor=professor,
+            escola_nome=escola_nome,
+            serie_nome=serie_nome,
+            turma_nome = turma_nome
+        )
+    else:
+        flash("Você não está logado!")
+        return redirect(url_for("login"))
+    
+
+@app.route("/user/professores/professor/editar/<int:professor_id>", methods=["POST", "GET"])
+def editar_professor(professor_id):
+    if "user_id" in session:
+        # Busca o aluno pelo ID
+        found_professor = Funcionarios.query.get(professor_id)
+        
+        if not found_professor:
+            flash("Aluno não encontrado!")
+            return redirect(url_for("user"))
+        
+         # Consultar a alocação do funcionário
+        alocacao = AlocacaoFuncionario.query.filter_by(funcionario_id=professor_id).first()
+
+        # Preparar as informações de alocação
+        escola_nome = alocacao.escola.nome if alocacao and alocacao.escola else "Não alocado"
+        serie_nome = alocacao.serie.nome if alocacao and alocacao.serie else "Não alocado"
+        turma_nome = alocacao.turma.nome if alocacao and alocacao.turma else "Não alocado"
+
+        if request.method == "POST":
+            # Atualiza os dados do aluno com base no formulário
+            found_professor.nome = request.form["edit_professor_nome"]
+            found_professor.telefone = request.form["edit_professor_telefone"]
+            found_professor.genero = request.form["edit_professor_genero"]
+            found_professor.cpf = request.form["edit_professor_cpf"]
+            found_professor.email = request.form["edit_professor_email"]
+            found_professor.data_nascimento = request.form["edit_professor_nascimento"]
+            found_professor.matricula = request.form["edit_professor_matricula"]
+            found_professor.lotacao = request.form["edit_professor_lotacao"]
+            found_professor.add1 = request.form["edit_professor_tipo"]
+            found_professor.add2 = request.form["edit_professor_disciplina"]
+            found_professor.add3 = request.form["edit_professor_pos"]
+            found_professor.periodo = request.form["edit_professor_periodo"]
+            found_professor.efetivo = request.form["edit_professor_efetivo"]
+            found_professor.formacao = request.form["edit_professor_formacao"]
+            found_professor.rua = request.form["edit_professor_rua"]
+            found_professor.numero = request.form["edit_professor_numero"]
+            found_professor.bairro = request.form["edit_professor_bairro"]
+            found_professor.cidade = request.form["edit_professor_cidade"]
+            found_professor.estado = request.form["edit_professor_estado"]
+            found_professor.cep = request.form["edit_professor_cep"]
+            found_professor.situacao = request.form["edit_professor_situacao"]
+
+            # Não atualiza os campos de escola, turma, série, período, data e hora de cadastro
+            # (Esses campos são omitidos da atualização)
+            
+            # Salva as alterações no banco de dados
+            db.session.commit()
+
+            flash("Informações do professor foram salvas com sucesso!")
+            
+             # Redireciona para a página do aluno
+            return redirect(url_for("mostrar_professor", professor_id=professor_id,  escola_nome=escola_nome,
+            serie_nome=serie_nome, turma_nome = turma_nome))
+
+        # Se for uma requisição GET, preenche o formulário com os dados do aluno
+        return render_template("editar_professor.html", professor=found_professor, escola_nome=escola_nome,
+            serie_nome=serie_nome, turma_nome = turma_nome)
+    else:
+        flash("Você não está logado!")
+        return redirect(url_for("login"))
+
+
+
 @app.route("/user/alunos")
 def alunos():
     # Consulta todos os alunos
-    todos_alunos = Aluno.query.all()
+    #todos_alunos = Aluno.query.all()
 
-    return render_template("alunos.html", alunos=todos_alunos, current_page='alunos')
+    return render_template("alunos.html", current_page='alunos')
 
 ##API USUARIOS
 @app.route('/api/alunos', methods=['GET'])
@@ -307,9 +447,144 @@ def get_usuarios():
 
 @app.route("/user/funcionarios")
 def funcionarios():
-    # Consulta todas os funcionários
+    if "user_id" in session:
+        # Consulta todos os professores
+        funcionarios = Funcionarios.query.all()
+        return render_template("funcionarios.html", funcionarios=funcionarios, current_page='funcionarios')
+    else:
+        flash("Você não está logado!")
+        return redirect(url_for("login"))
+
+@app.route('/api/funcionarios', methods=['GET']) 
+def get_funcionarios():
+    # Consulta todos os funcionários
     funcionarios = Funcionarios.query.all()
-    return render_template("funcionarios.html", funcionarios=funcionarios, current_page='funcionarios')
+
+    # Converte os funcionários para um formato JSON
+    funcionarios_json = []
+
+    for funcionario in funcionarios:
+        # Consultar a alocação do funcionário
+        alocacao = AlocacaoFuncionario.query.filter_by(funcionario_id=funcionario.id).first()
+
+        # Preparar as informações de alocação
+        escola_nome = alocacao.escola.nome if alocacao and alocacao.escola else ""
+        serie_nome = alocacao.serie.nome if alocacao and alocacao.serie else ""
+        turma_nome = alocacao.turma.nome if alocacao and alocacao.turma else ""
+
+        # Concatenar série e turma se ambos existirem
+        serie_turma = f"{serie_nome} {turma_nome}".strip() if serie_nome or turma_nome else "Não alocado"
+
+        # Criar o dicionário com as informações do funcionário
+        funcionario_json = {
+            'nome': funcionario.nome,
+            'matricula': funcionario.matricula,
+            'cpf': funcionario.cpf,
+            'telefone': funcionario.telefone,
+            'cargo': funcionario.cargo,
+            'escola': escola_nome if escola_nome else "Não alocado",
+            'serie': serie_turma,
+            'periodo': funcionario.periodo,
+            'status': funcionario.situacao,
+            'id': funcionario.id
+        }
+
+        funcionarios_json.append(funcionario_json)
+
+    return jsonify(funcionarios_json)
+
+@app.route("/user/funcionarios/funcionario/<int:funcionario_id>", methods=["GET"])
+def mostrar_funcionario(funcionario_id):
+    if "user_id" in session:
+        funcionario = Funcionarios.query.get(funcionario_id)
+
+        # Consultar a alocação do funcionário
+        alocacao = AlocacaoFuncionario.query.filter_by(funcionario_id=funcionario_id).first()
+
+        # Preparar as informações de alocação
+        escola_nome = alocacao.escola.nome if alocacao and alocacao.escola else "Não alocado"
+        serie_nome = alocacao.serie.nome if alocacao and alocacao.serie else "Não alocado"
+        turma_nome = alocacao.turma.nome if alocacao and alocacao.turma else "Não alocado"
+        #serie_turma = f"{serie_nome} {turma_nome}".strip() if serie_nome or turma_nome else "Não alocado"
+
+        # Passar os dados de alocação junto com o funcionário
+        return render_template(
+            "mostrar_funcionario.html",
+            funcionario=funcionario,
+            escola_nome=escola_nome,
+            serie_nome=serie_nome,
+            turma_nome = turma_nome
+        )
+    else:
+        flash("Você não está logado!")
+        return redirect(url_for("login"))
+    
+
+@app.route("/user/funcionarios/funcionario/editar/<int:funcionario_id>", methods=["POST", "GET"])
+def editar_funcionario(funcionario_id):
+    if "user_id" in session:
+        # Busca o aluno pelo ID
+        found_funcionario = Funcionarios.query.get(funcionario_id)
+        
+        if not found_funcionario:
+            flash("Funcionário não encontrado!")
+            return redirect(url_for("user"))
+        
+        # Consultar a alocação do funcionário
+        alocacao = AlocacaoFuncionario.query.filter_by(funcionario_id=funcionario_id).first()
+
+        # Preparar as informações de alocação
+        escola_nome = alocacao.escola.nome if alocacao and alocacao.escola else "Não alocado"
+        serie_nome = alocacao.serie.nome if alocacao and alocacao.serie else "Não alocado"
+        turma_nome = alocacao.turma.nome if alocacao and alocacao.turma else "Não alocado"
+
+        if request.method == "POST":
+            # Atualiza os dados do aluno com base no formulário
+            found_funcionario.nome = request.form["edit_funcionario_nome"]
+            found_funcionario.telefone = request.form["edit_funcionario_telefone"]
+            found_funcionario.genero = request.form["edit_funcionario_genero"]
+            found_funcionario.cpf = request.form["edit_funcionario_cpf"]
+            found_funcionario.email = request.form["edit_funcionario_email"]
+            found_funcionario.data_nascimento = request.form["edit_funcionario_nascimento"]
+            found_funcionario.matricula = request.form["edit_funcionario_matricula"]
+            found_funcionario.lotacao = request.form["edit_funcionario_lotacao"]
+            found_funcionario.add1 = request.form["edit_funcionario_tipo"]
+            found_funcionario.add3 = request.form["edit_funcionario_pos"]
+            found_funcionario.periodo = request.form["edit_funcionario_periodo"]
+            found_funcionario.efetivo = request.form["edit_funcionario_efetivo"]
+            found_funcionario.formacao = request.form["edit_funcionario_formacao"]
+            found_funcionario.rua = request.form["edit_funcionario_logradouro"]
+            found_funcionario.numero = request.form["edit_funcionario_numero"]
+            found_funcionario.bairro = request.form["edit_funcionario_bairro"]
+            found_funcionario.cidade = request.form["edit_funcionario_cidade"]
+            found_funcionario.estado = request.form["edit_funcionario_estado"]
+            found_funcionario.cep = request.form["edit_funcionario_cep"]
+            found_funcionario.situacao = request.form["edit_funcionario_situacao"]
+
+            # Não atualiza os campos de escola, turma, série, período, data e hora de cadastro
+            # (Esses campos são omitidos da atualização)
+            
+            # Salva as alterações no banco de dados
+            db.session.commit()
+
+            flash("Informações do funcionário foram salvas com sucesso!")
+            
+             # Redireciona para a página do aluno
+            return redirect(url_for("mostrar_funcionario", funcionario_id=funcionario_id, escola_nome=escola_nome,
+            serie_nome=serie_nome, turma_nome = turma_nome))
+
+        # Se for uma requisição GET, preenche o formulário com os dados do aluno
+        return render_template("editar_funcionario.html", funcionario=found_funcionario, escola_nome=escola_nome,
+            serie_nome=serie_nome, turma_nome = turma_nome)
+    else:
+        flash("Você não está logado!")
+        return redirect(url_for("login"))
+
+
+@app.route("/user/transferir")
+def transferir():
+    return render_template("transferir.html")
+
 
 @app.route("/user/gestao")
 def gestao():
@@ -319,6 +594,13 @@ def gestao():
 def escolas():
     escolas = Escola.query.all()
     return render_template("escolas.html", escolas=escolas, current_page='escolas' )
+
+@app.route("/check_user_logged_in", methods=["GET"])
+def check_user_logged_in():
+    if "user_id" in session:
+        return {"logged_in": True}
+    else:
+        return {"logged_in": False}
 
 @app.route("/user/documentos")
 def documentos():
@@ -529,6 +811,7 @@ def cadastro_escola():
 def cadastro_professor():
     if "user_id" in session:
         if request.method == "POST":
+            # Coletar os dados do formulário
             nome = request.form["cd_professor_nome"]
             telefone = request.form["cd_professor_telefone"]
             genero = request.form["cd_professor_genero"]
@@ -536,24 +819,17 @@ def cadastro_professor():
             email = request.form["cd_professor_email"]
             data_nascimento = request.form["cd_professor_nascimento"]
 
-            # Exemplo:
             matricula = request.form["cd_professor_matricula"]
-            lotacao = request.form["cd_professor_lotacao"]
-            cargo = request.form["cd_professor_cargo"]
+            local_trabalho = request.form["cd_professor_local_trabalho"]
+            cargo = request.form["cargo"]
             tipo = request.form["cd_professor_tipo"]
             disciplina = request.form["cd_professor_disciplina"]
             pos_graduacao = request.form["cd_professor_pos"]
 
-            escola_id = request.form["escola"]
-            # Continue capturando os outros dados do formulário...
-            serie_id = request.form["serie"]  # Capturar o ID da série selecionada
-            turma_id = request.form["cd_func_turma"]  # Capturar o ID da turma selecionada
-            periodo = request.form["periodo"]  # Capturar o ID da turma selecionada
-            
-            # Exemplo:
+            periodo = request.form["periodo"]  # Capturar o ID do período selecionado
             efetivo = request.form["cd_professor_efetivo"]
             formacao = request.form["cd_professor_formacao"]
-        
+
             rua = request.form["cd_professor_logradouro"]
             numero = request.form["cd_professor_numero"]
             bairro = request.form["cd_professor_bairro"]
@@ -565,32 +841,53 @@ def cadastro_professor():
             data_atual = datetime.now().strftime('%d/%m/%Y')
             hora_atual = datetime.now().strftime('%H:%M:%S')
 
-            # Criar um novo aluno com os dados fornecidos
-            novo_funcionario = Funcionarios(nome=nome, telefone=telefone, genero=genero, cpf=cpf, email=email, data_nascimento=data_nascimento, data=data_atual, hora=hora_atual, matricula=matricula, lotacao=lotacao, cargo=cargo, add1=tipo, add2=disciplina, add3=pos_graduacao ,periodo=periodo, efetivo = efetivo, formacao = formacao, escola_id=escola_id, rua=rua, numero=numero, bairro=bairro, cidade=cidade, estado=estado, cep=cep, situacao="ativo")
-            
-            # Buscar as instâncias da turma e série com base nos IDs
-            turma = Turma.query.get(turma_id)
-            serie = Serie.query.get(serie_id)
+            # Criar um novo professor com os dados fornecidos
+            novo_funcionario = Funcionarios(
+                nome=nome, telefone=telefone, genero=genero, cpf=cpf, email=email, 
+                data_nascimento=data_nascimento, data=data_atual, hora=hora_atual, 
+                matricula=matricula, lotacao="Secretaria de Educação", local_trabalho=local_trabalho, 
+                cargo=cargo, add1=tipo, add2=disciplina, add3=pos_graduacao, 
+                periodo=periodo, efetivo=efetivo, formacao=formacao, rua=rua, numero=numero, 
+                bairro=bairro, cidade=cidade, estado=estado, cep=cep, situacao="Ativo"
+            )
 
-            # Busque a instância da escola
-            escola = Escola.query.get(escola_id)
-
-            # Incrementar o atributo qnt_alunos em 1
-            escola.qnt_funcionarios += 1
-
-            # Associar o aluno à turma e série
-            novo_funcionario.turma = turma
-            novo_funcionario.serie = serie
-
-            # Adicionar e commitar o novo aluno ao banco de dados
             db.session.add(novo_funcionario)
+            db.session.commit()  # Salvamos o novo professor no banco antes de continuar
+
+            # Verificar se foi selecionada uma escola
+            tem_escola = request.form.get("escola_sede")  # Captura o valor do radio button
+
+            if tem_escola == "Sim":
+                # Capturar os dados de escola, série e turma
+                escola_id = request.form["escola"]
+                serie_id = request.form.get("serie")  # Captura o ID da série selecionada, se houver
+                turma_id = request.form.get("cd_func_turma")  # Captura o ID da turma selecionada, se houver
+
+                # Buscar a instância da escola e incrementar qnt_funcionarios
+                escola = Escola.query.get(escola_id)
+                escola.qnt_funcionarios += 1
+
+                # Criar o registro de alocação para o professor
+                nova_alocacao = AlocacaoFuncionario(
+                    funcionario_id=novo_funcionario.id,
+                    escola_id=escola_id,
+                    serie_id=serie_id if serie_id else None,  # Se não houver série selecionada, salva como None
+                    turma_id=turma_id if turma_id else None,  # Se não houver turma selecionada, salva como None
+                    data_alocacao=data_atual,
+                    hora_alocacao=hora_atual
+                )
+
+                # Adicionar a alocação no banco de dados
+                db.session.add(nova_alocacao)
+
+            # Comitar todas as mudanças
             db.session.commit()
 
-            # Redirecionar para alguma página de confirmação ou outra rota
+            # Redirecionar para a página de professores ou confirmação
             return redirect(url_for("professores"))
 
         else:
-            # Se o método da requisição não for POST, apenas renderize o template de cadastro
+            # Se o método da requisição não for POST, renderiza o template de cadastro
             escolas = Escola.query.all()
             return render_template("cadastro_professor.html", escolas=escolas)
     else:
@@ -608,18 +905,11 @@ def cadastro_funcionario():
             email = request.form["cd_func_email"]
             data_nascimento = request.form["cd_func_nascimento"]
 
-            # Exemplo:
             matricula = request.form["cd_func_matricula"]
-            lotacao = request.form["cd_func_lotacao"]
+            local_trabalho = request.form["cd_func_local_trabalho"]
             cargo = request.form["cd_func_cargo"]
+            periodo = request.form["periodo"]
 
-            escola_id = request.form["escola"]
-            # Continue capturando os outros dados do formulário...
-            serie_id = request.form["serie"]  # Capturar o ID da série selecionada
-            turma_id = request.form["cd_func_turma"]  # Capturar o ID da turma selecionada
-            periodo = request.form["periodo"]  # Capturar o ID da turma selecionada
-            
-            # Exemplo:
             efetivo = request.form["cd_func_efetivo"]
             formacao = request.form["cd_func_formacao"]
         
@@ -634,32 +924,53 @@ def cadastro_funcionario():
             data_atual = datetime.now().strftime('%d/%m/%Y')
             hora_atual = datetime.now().strftime('%H:%M:%S')
 
-            # Criar um novo aluno com os dados fornecidos
-            novo_funcionario = Funcionarios(nome=nome, telefone=telefone, genero=genero, cpf=cpf, email=email, data_nascimento=data_nascimento, data=data_atual, hora=hora_atual, matricula=matricula, lotacao=lotacao, cargo=cargo, add1="", add2="", add3="", periodo=periodo, efetivo = efetivo, formacao = formacao, escola_id=escola_id, rua=rua, numero=numero, bairro=bairro, cidade=cidade, estado=estado, cep=cep, situacao="ativo")
-            
-            # Buscar as instâncias da turma e série com base nos IDs
-            turma = Turma.query.get(turma_id)
-            serie = Serie.query.get(serie_id)
+            # Criar um novo funcionário com os dados fornecidos
+            novo_funcionario = Funcionarios(
+                nome=nome, telefone=telefone, genero=genero, cpf=cpf, email=email, 
+                data_nascimento=data_nascimento, data=data_atual, hora=hora_atual, 
+                matricula=matricula, lotacao="Secretaria de Educação", local_trabalho=local_trabalho, 
+                cargo=cargo, add1="", add2="", add3="", periodo=periodo, efetivo=efetivo, 
+                formacao=formacao, rua=rua, numero=numero, bairro=bairro, cidade=cidade, 
+                estado=estado, cep=cep, situacao="Ativo"
+            )
 
-            # Busque a instância da escola
-            escola = Escola.query.get(escola_id)
-
-            # Incrementar o atributo qnt_alunos em 1
-            escola.qnt_funcionarios += 1
-
-            # Associar o aluno à turma e série
-            novo_funcionario.turma = turma
-            novo_funcionario.serie = serie
-
-            # Adicionar e commitar o novo aluno ao banco de dados
             db.session.add(novo_funcionario)
+            db.session.commit()  # Salvamos o novo funcionário no banco antes de continuar
+
+            # Verificar se foi selecionada uma escola
+            tem_escola = request.form.get("escola_sede")  # Captura o valor do radio button
+
+            if tem_escola == "Sim":
+                # Capturar os dados de escola, série e turma
+                escola_id = request.form["escola"]
+                serie_id = request.form.get("serie")  # Captura o ID da série selecionada, se houver
+                turma_id = request.form.get("cd_func_turma")  # Captura o ID da turma selecionada, se houver
+
+                # Buscar a instância da escola e incrementar qnt_funcionarios
+                escola = Escola.query.get(escola_id)
+                escola.qnt_funcionarios += 1
+
+                # Criar o registro de alocação para o funcionário
+                nova_alocacao = AlocacaoFuncionario(
+                    funcionario_id=novo_funcionario.id,
+                    escola_id=escola_id,
+                    serie_id=serie_id if serie_id else None,  # Se não houver série selecionada, salva como None
+                    turma_id=turma_id if turma_id else None,  # Se não houver turma selecionada, salva como None
+                    data_alocacao=data_atual,
+                    hora_alocacao=hora_atual
+                )
+
+                # Adicionar a alocação no banco de dados
+                db.session.add(nova_alocacao)
+            
+            # Comitar todas as mudanças
             db.session.commit()
 
-            # Redirecionar para alguma página de confirmação ou outra rota
+            # Redirecionar para a página de funcionários ou confirmação
             return redirect(url_for("funcionarios"))
 
         else:
-            # Se o método da requisição não for POST, apenas renderize o template de cadastro
+            # Se o método da requisição não for POST, renderiza o template de cadastro
             escolas = Escola.query.all()
             return render_template("cadastro_funcionario.html", escolas=escolas)
     else:
@@ -948,6 +1259,8 @@ def logout():
     session.pop("user_id", None)
     return redirect(url_for("login"))
 
+from io import BytesIO
+
 @app.route('/user/alunos/gerar_pdf/<int:aluno_id>', methods=['GET'])
 def gerar_pdf(aluno_id):
     if "user_id" in session:
@@ -1045,14 +1358,18 @@ def get_aluno(aluno_id):
 
 
 
-@app.route("/gerar_pdf_branco", methods=["GET"])
-def gerar_pdf_branco():
+@app.route("/documentos/comprovante_escolar", methods=["GET"])
+def gerar_pdf_comprovante_escolar():
     if "user_id" in session:
-        # Renderiza o template HTML com os dados do usuário
-        html_content = render_template("declaracao2.html")
+       
+        # Renderiza o template HTML com os dados do aluno e a data atual
+        html_content = render_template("model_comprovante_escolar.html")
+
+        # Cria um buffer de memória
+        pdf_buffer = BytesIO()
 
         # Cria um novo documento PDF
-        doc = fitz.Document()
+        doc = fitz.open()
 
         # Adiciona uma nova página
         page = doc.new_page()
@@ -1060,27 +1377,34 @@ def gerar_pdf_branco():
 
         # Insere o HTML modificado na página
         page.insert_htmlbox(rect, html_content, archive=fitz.Archive("."))
+        # Define os metadados do documento (incluindo o título)
+        metadata = {
+            "title": "Comprovante Escolar"
+        }
+        doc.set_metadata(metadata)
 
-        # Caminho para salvar o PDF (na pasta raiz do projeto)
-        pdf_filename = f'declaracao_branco.pdf'
+        # Salva o PDF diretamente no buffer de memória
+        doc.save(pdf_buffer)
 
-        # Salva o PDF
-        doc.ez_save(pdf_filename)
+        # Move o cursor para o início do buffer
+        pdf_buffer.seek(0)
 
-        # Retorna o arquivo PDF gerado sem forçar download
-        return send_file(pdf_filename, mimetype='application/pdf')
+        # Retorna o arquivo PDF gerado sem salvá-lo no disco
+        return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=False)
     else:
-        flash("Você não está logado!")
         return redirect(url_for("login"))
 
-@app.route("/gerar_pdf_conclusao_escolar", methods=["GET"])
+@app.route("/documentos/conclusao_escolar", methods=["GET"])
 def gerar_pdf_conclusao_escolar():
     if "user_id" in session:
         # Renderiza o template HTML com os dados do usuário
         html_content = render_template("model_declaracao_conclusao.html")
 
+        # Cria um buffer de memória
+        pdf_buffer = BytesIO()
+
         # Cria um novo documento PDF
-        doc = fitz.Document()
+        doc = fitz.open()
 
         # Adiciona uma nova página
         page = doc.new_page()
@@ -1088,27 +1412,34 @@ def gerar_pdf_conclusao_escolar():
 
         # Insere o HTML modificado na página
         page.insert_htmlbox(rect, html_content, archive=fitz.Archive("."))
+        # Define os metadados do documento (incluindo o título)
+        metadata = {
+            "title": "Conclusão de Vaga"
+        }
+        doc.set_metadata(metadata)
 
-        # Caminho para salvar o PDF (na pasta raiz do projeto)
-        pdf_filename = f'modelo_declaracao_conclusao_escolar.pdf'
+        # Salva o PDF diretamente no buffer de memória
+        doc.save(pdf_buffer)
 
-        # Salva o PDF
-        doc.ez_save(pdf_filename)
+        # Move o cursor para o início do buffer
+        pdf_buffer.seek(0)
 
-        # Retorna o arquivo PDF gerado sem forçar download
-        return send_file(pdf_filename, mimetype='application/pdf')
+        # Retorna o arquivo PDF gerado sem salvá-lo no disco
+        return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=False)
     else:
-        flash("Você não está logado!")
         return redirect(url_for("login"))
     
-@app.route("/gerar_pdf_solicitacao_vaga", methods=["GET"])
+@app.route("/documentos/solicitacao_vaga", methods=["GET"])
 def gerar_pdf_solicitacao_vaga():
     if "user_id" in session:
         # Renderiza o template HTML com os dados do usuário
         html_content = render_template("model_solicitacao_vaga.html")
 
+        # Cria um buffer de memória
+        pdf_buffer = BytesIO()
+
         # Cria um novo documento PDF
-        doc = fitz.Document()
+        doc = fitz.open()
 
         # Adiciona uma nova página
         page = doc.new_page()
@@ -1116,27 +1447,35 @@ def gerar_pdf_solicitacao_vaga():
 
         # Insere o HTML modificado na página
         page.insert_htmlbox(rect, html_content, archive=fitz.Archive("."))
+        # Define os metadados do documento (incluindo o título)
+        metadata = {
+            "title": "Solicitação de Vaga"
+        }
+        doc.set_metadata(metadata)
 
-        # Caminho para salvar o PDF (na pasta raiz do projeto)
-        pdf_filename = f'modelo_solicitacao_vaga.pdf'
+        # Salva o PDF diretamente no buffer de memória
+        doc.save(pdf_buffer)
 
-        # Salva o PDF
-        doc.ez_save(pdf_filename)
+        # Move o cursor para o início do buffer
+        pdf_buffer.seek(0)
 
-        # Retorna o arquivo PDF gerado sem forçar download
-        return send_file(pdf_filename, mimetype='application/pdf')
+        # Retorna o arquivo PDF gerado sem salvá-lo no disco
+        return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=False)
     else:
-        flash("Você não está logado!")
         return redirect(url_for("login"))
 
-@app.route("/gerar_pdf_declaracao_transferencia", methods=["GET"])
+
+@app.route("/documentos/declaracao_transferencia", methods=["GET"])
 def gerar_pdf_declaracao_transferencia():
     if "user_id" in session:   
         # Renderiza o template HTML com os dados do usuário
         html_content = render_template("model_declaracao_transferencia.html")
 
+        # Cria um buffer de memória
+        pdf_buffer = BytesIO()
+
         # Cria um novo documento PDF
-        doc = fitz.Document()
+        doc = fitz.open()
 
         # Adiciona uma nova página
         page = doc.new_page()
@@ -1144,17 +1483,21 @@ def gerar_pdf_declaracao_transferencia():
 
         # Insere o HTML modificado na página
         page.insert_htmlbox(rect, html_content, archive=fitz.Archive("."))
+        # Define os metadados do documento (incluindo o título)
+        metadata = {
+            "title": "Transferência Escolar"
+        }
+        doc.set_metadata(metadata)
 
-        # Caminho para salvar o PDF (na pasta raiz do projeto)
-        pdf_filename = f'modelo_declaracao_transferencia.pdf'
+        # Salva o PDF diretamente no buffer de memória
+        doc.save(pdf_buffer)
 
-        # Salva o PDF
-        doc.ez_save(pdf_filename)
+        # Move o cursor para o início do buffer
+        pdf_buffer.seek(0)
 
-        # Retorna o arquivo PDF gerado sem forçar download
-        return send_file(pdf_filename, mimetype='application/pdf')
+        # Retorna o arquivo PDF gerado sem salvá-lo no disco
+        return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=False)
     else:
-        flash("Você não está logado!")
         return redirect(url_for("login"))
 
 
@@ -1200,7 +1543,22 @@ def periodos(escola_id):
             return jsonify([])  # Retornando uma lista vazia como resposta JSON
     else:
         return jsonify([])  # Retornando uma lista vazia se a solicitação não é AJAX
-
+    
+@app.route('/consulta_cep/<cep>', methods=['GET'])
+def consulta_cep(cep):
+    url = f'https://viacep.com.br/ws/{cep}/json/'
+    response = requests.get(url)
+    
+    # Verifica se o CEP foi encontrado
+    if response.status_code == 200:
+        dados_cep = response.json()
+        # Verifica se o CEP é válido
+        if 'erro' not in dados_cep:
+            return jsonify(dados_cep)
+        else:
+            return jsonify({'erro': 'CEP inválido'}), 404
+    else:
+        return jsonify({'erro': 'Falha na consulta ao CEP'}), 500
 # Executando o aplicativo com configuração para o Heroku
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

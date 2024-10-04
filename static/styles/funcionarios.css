@@ -50,17 +50,39 @@ table {
   /* Zebra striping */
   tr:nth-of-type(odd) { 
     background: #eee; 
-  }
-  th { 
+}
+th { 
     background: #333; 
     color: white; 
-    font-weight: bold; 
-  }
-  td, th { 
-    padding: 6px; 
+    font-weight: bold;
+	font-size: 15px; 
+	padding: 6px; 
+    border: 1px solid #ccc; 
+    text-align: center; 
+}
+td { 
     border: 1px solid #ccc; 
     text-align: left; 
-  }
+}
+#tabelaFuncionarios th:nth-child(1){
+	border-top-left-radius: 15px;
+	border: 1px solid #eee ;
+	
+}
+#tabelaFuncionarios th:nth-child(9){
+	border-top-right-radius: 15px;
+	border: 1px solid #eee ;
+}
+#tabelaFuncionarios td:nth-child(1) {
+		text-align: center;
+}
+#tabelaFuncionarios td:nth-child(2), #tabelaFuncionarios td:nth-child(3),
+#tabelaFuncionarios td:nth-child(4), #tabelaFuncionarios td:nth-child(5), 
+#tabelaFuncionarios td:nth-child(6), #tabelaFuncionarios td:nth-child(7),
+#tabelaFuncionarios td:nth-child(8), #tabelaFuncionarios td:nth-child(9) {
+	  font-size: 15px;
+	  padding: 3px;
+}
 /* 
 Max width before this PARTICULAR table gets nasty
 This query will take effect for any screen smaller than 760px
@@ -152,4 +174,7 @@ margin-bottom:auto;}
   }
   #filtroOpcao{
 	width: 173px;
+  }
+  .btn_editar{
+    cursor: pointer;
   }

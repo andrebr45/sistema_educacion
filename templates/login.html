@@ -20,8 +20,8 @@
             <form action="{{ url_for('login') }}" method="post">
                 <p><input  id="form-campo" placeholder="Nome" type="text" name="nm"/></p>
                 <p><input id="form-campo" placeholder="Senha" type="password" name="senha"/></p>
-                <a id="esqueceu_senha" href="#">Esqueceu a senha ?</a>
-                <div class="buttom"><p><input type="submit" value="Entrar"/></p></div>
+                <div id="campo_esqueceu_senha"><a id="texto_esqueceu_senha" href="#">Esqueceu a senha ?</a></div>
+                <div class="buttom"><p><input type="submit" value="Entrar" id="btn_login"/></p></div>
             </form>
         </div>  
       </div>

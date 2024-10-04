@@ -157,3 +157,12 @@ form .buttons button , .backBtn{
     color: #fdfdfd; 
     border: 0;
 }
+#escola_sede{
+    display: flex;
+}
+#escolha_sede{
+    display: flex;
+    margin-left: 10px;
+    width: 105px;
+    justify-content: space-between; 
+}

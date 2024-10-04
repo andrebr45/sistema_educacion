@@ -34,7 +34,7 @@
                         <div class="input-field">
                             <label>Gênero</label>
                             <select name="cd_professor_genero" type="text">
-                                <option disabled selected>Selecionar Gênero</option>
+                                <option value="Não alocado" selected>Selecionar Gênero</option>
                                 <option value="Masculino">Masculino</option>
                                 <option value="Feminino">Feminino</option>
                                 <option value="Outros">Outros</option>
@@ -63,33 +63,30 @@
                             <input type="text" name="cd_professor_matricula" placeholder="Matrícula">
                         </div>
                         <div class="input-field">
-                            <label>Lotação</label>
-                            <input type="text" name="cd_professor_lotacao" placeholder="Lotação">
+                            <label>Local de Trabalho</label>
+                            <select name="cd_professor_local_trabalho" required>
+                                <option value="Não alocado" selected>Selecionar local</option>
+                                <option value="Escola">Escola</option>
+                                <option value="Secretaria de Educação">Secretaria de Educação</option>
+                            </select>
                         </div>
                         <div class="input-field">
                             <label>Cargo</label>
-                            <input type="text" name="cd_professor_cargo" value="Professor" required readonly/>
+                            <input type="text" name="cargo" value="Professor" required/>
                         </div>
                         <div class="input-field">
                             <label>Tipo</label>
-                            <select name="cd_professor_tipo" type="text">
-                                <option disabled selected>Selecionar Tipo Professor</option>
-                                <option value="Masculino">PEB 1</option>
-                                <option value="Feminino">PEB 2</option>
-                                <option value="Outros">Educador Físico</option>
+                            <select id="cd_professor_tipo" name="cd_professor_tipo" required>
+                                <option value="Não alocado" selected>Selecionar Gênero</option>
+                                <option value="PEB 1">PEB 1</option>
+                                <option value="PEB 2">PEB 2</option>
                             </select>
                         </div>
                         <div class="input-field">
                             <label>Disciplina</label>
-                            <select name="cd_professor_disciplina" type="text">
-                                <option disabled selected>Selecionar Disciplina</option>
-                                <option value="Língua Portuguesa">Língua Portuguesa</option>
-                                <option value="Matemática">Matemática</option>
-                                <option value="Ciências">Ciências</option>
-                                <option value="História">História</option>
-                                <option value="Geografia">Geografia</option>
-                                <option value="Inglês">Inglês</option>
-                                <option value="Educação Física">Educação Física</option>
+                            <select id="cd_professor_disciplina" name="cd_professor_disciplina" required>
+                                <option value="Não alocado">Selecionar Disciplina</option>
+                                <!-- As opções serão carregadas dinamicamente -->
                             </select>
                         </div>
                         <div class="input-field">
@@ -103,7 +100,25 @@
                         </div>
                     </div>
                 <div class="details ID">
-                    <span class="title">Local de Trabalho</span>
+                    <div>
+                        <span class="title" id="escola_sede">Sala de Aula?
+                            <ul class="list" id="escolha_sede">
+                                <li class="list-item">
+                                    <input type="radio" class="hidden-box" name="escola_sede" value="Sim" id="tem_escola_sim" checked />
+                                    <label for="tem_escola_sim">
+                                        <span class="check--label-text">Sim</span>
+                                    </label>
+                                </li>
+                                <li class="list-item">
+                                    <input type="radio" class="hidden-box" name="escola_sede" value="Não" id="tem_escola_nao" />
+                                    <label for="tem_escola_nao">
+                                        <span class="check--label-text">Não</span>
+                                    </label>
+                                </li>
+                            </ul>
+                        </span>
+                    </div>
+                    
                     <div class="fields">
                         <div class="input-field">
                             <label for="inputEscolaForm">Escola</label>
@@ -114,15 +129,15 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="input-field">
+                        <div class="input-field escola">
                             <label for="inputSerieForm">Série</label>
-                            <select id="inputSerieForm" name="serie" required>
+                            <select id="inputSerieForm" name="serie">
                                 <option value="" selected>Selecione a série</option>
                             </select>
                         </div>
-                        <div class="input-field">
+                        <div class="input-field escola">
                             <label>Turma</label>
-                            <select id="inputTurmaForm" name="cd_func_turma" type="text" required>
+                            <select id="inputTurmaForm" name="cd_func_turma" type="text">
                                 <option disabled selected>Selecionar</option>
                                 <!-- Opções de turmas serão adicionadas dinamicamente aqui -->
                             </select>
@@ -130,7 +145,7 @@
                         <div class="input-field">
                             <label for="inputPeriodoForm">Período</label>
                             <select id="inputPeriodoForm" name="periodo" required>
-                                <option disabled selected>Selecionar Gênero</option>
+                                <option value="Não alocado" selected>Selecionar Gênero</option>
                                 <option value="Manhã">Manhã</option>
                                 <option value="Tarde">Tarde</option>
                                 <option value="Expediente">Expediente</option>
@@ -139,7 +154,7 @@
                         <div class="input-field">
                             <label>É efetivo ?</label>
                             <select name="cd_professor_efetivo" type="text">
-                                <option disabled selected>Selecionar</option>
+                                <option value="Não alocado" selected>Selecionar</option>
                                 <option value="Sim">Sim</option>
                                 <option value="Não">Não</option>
                             </select>
@@ -147,7 +162,7 @@
                         <div class="input-field">
                             <label>Formação ?</label>
                             <select name="cd_professor_formacao" type="text">
-                                <option disabled selected>Selecionar</option>
+                                <option value="Não alocado" selected>Selecionar</option>
                                 <option value="Ensino Médio">Magistério</option>
                                 <option value="Ensino Superior">Ensino Superior</option>
                             </select>
@@ -187,5 +202,5 @@
             </div>
         </form>
     </div>
-    <script src="{{ url_for('static', filename='js/cadastro_funcionario.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cadastro_professor.js') }}"></script>
 {% endblock %}

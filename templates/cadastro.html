@@ -34,7 +34,7 @@
                     <div class="input-field">
                         <label>Gênero</label>
                         <select name="cd_user_genero" type="text" placeholder="Gênero">
-                            <option disabled>Selecionar Gênero</option>
+                            <option value="Não Alocado">Selecionar Gênero</option>
                             <option value="Masculino">Masculino</option>
                             <option value="Feminino">Feminino</option>
                             <option value="Outros">Outros</option>
@@ -69,7 +69,7 @@
                     <div class="input-field">
                         <label>Local de Trabalho</label>
                         <select name="cd_user_trabalho" type="text" required>
-                            <option>Selecionar o Local de Trabalho</option>
+                            <option value="Não Alocado">Selecionar o Local de Trabalho</option>
                             <option value="Secretaria Municipal de Educação">SME</option>
                             <option value="Supervisão">Supervisão</option>
                             <option value="Merenda Escolar">Merenda Escolar</option>
@@ -77,23 +77,26 @@
                             <option value="Almoxarifado">Almoxarifado</option>
                             <option value="Manutenção Escolar">Manutenção Escolar</option>
                             <option value="Transporte">Transporte</option>
-                            <option value="Administrador">Administrador</option>
+                            <option value="Escola">Escola</option>
                         </select>
                     </div>
                     <div class="input-field">
                             <label>Cargo</label>
                             <select name="cd_user_cargo" type="text" required>
-                                <option>Selecionar o Cargo</option>
-                                <option value="Agente Educacinal">Agente Educacinal</option>
-                                <option value="Professora">Professora</option>
+                                <option value="Não Alocado">Selecionar o Cargo</option>
+                                <option value="Coordenadora">Coordenadora</option>
                                 <option value="Diretora">Diretora</option>
+                                <option value="Vice-diretor(a)">Vice-diretor(a)</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="Secretário(a)">Secretário(a)</option>
+                                <option value="Outros">Outros</option>
                                 <option value="Administrador">Administrador</option>
                             </select>
                     </div>
                     <div class="input-field">
                         <label>Nível de Acesso</label>
-                        <select name="cd_user_nivel_acesso" type="text">
-                            <option disabled>Selecionar Nível</option>
+                        <select name="cd_user_nivel_acesso" type="text" required>
+                            <option value="Não Alocado">Selecionar Nível</option>
                             <option value="Basico">Básico</option>
                             <option value="Avancado">Avançado</option>
                             <option value="Completo">Completo</option>
