@@ -1,6 +1,8 @@
 pip install flask
 pip install flask-sqlalchemy
 pip install PyMuPDF
+pip install bcrypt
+pip install requests
 
 heroku
 pip install gunicorn

@@ -60,10 +60,10 @@ searchButton.addEventListener('click', function (e) {
     }
 })
 
-//aviso alert aqui 
+
 if(window.innerWidth < 768) {
     sidebar.classList.add('hide');
-
+    //alert("Eu sou um\nAlert!");
 }else if (window.innerWidth > 576){
     searchButtonIcon.classList.replace('bx-x', 'bx-search');
     searchForm.classList.remove('show');

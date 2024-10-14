@@ -46,11 +46,8 @@
 table { 
     width: 100%; 
     border-collapse: collapse; 
-  }
-  /* Zebra striping */
-  tr:nth-of-type(odd) { 
-    background: #eee; 
 }
+
 th { 
     background: #333; 
     color: white; 
@@ -85,62 +82,7 @@ td {
 }
   
   
-/* 
-Max width before this PARTICULAR table gets nasty
-This query will take effect for any screen smaller than 760px
-and also iPads specifically.
-*/
-@media 
-only screen and (max-width: 760px),
-(min-device-width: 768px) and (max-device-width: 1024px)  {
 
-	/* Force table to not be like tables anymore */
-	table, thead, tbody, th, td, tr { 
-		display: block; 
-	}
-	
-	/* Hide table headers (but not display: none;, for accessibility) */
-	thead tr { 
-		position: absolute;
-		top: -9999px;
-		left: -9999px;
-	}
-	
-	tr { border: 1px solid #ccc; }
-	
-	td { 
-		/* Behave  like a "row" */
-		border: none;
-		border-bottom: 1px solid #eee; 
-		position: relative;
-		padding-left: 50%; 
-	}
-	
-	td:before { 
-		/* Now like a table header */
-		position: absolute;
-		/* Top/left values mimic padding */
-		top: 6px;
-		left: 6px;
-		width: 45%; 
-		padding-right: 10px; 
-		white-space: nowrap;
-	}
-	
-	/*
-	Label the data
-	*/
-	td:nth-of-type(1):before { content: "First Name"; }
-	td:nth-of-type(2):before { content: "Last Name"; }
-	td:nth-of-type(3):before { content: "Job Title"; }
-	td:nth-of-type(4):before { content: "Favorite Color"; }
-	td:nth-of-type(5):before { content: "Wars of Trek?"; }
-	td:nth-of-type(6):before { content: "Secret Alias"; }
-	td:nth-of-type(7):before { content: "Date of Birth"; }
-	td:nth-of-type(8):before { content: "Dream Vacation City"; }
-	td:nth-of-type(9):before { content: "GPA"; }
-	td:nth-of-type(10):before { content: "Arbitrary Data"; }
-}
 
 #quantidadeUsuarios{
 	font-size: 19px;
@@ -200,3 +142,63 @@ margin-bottom:auto;}
 	cursor: pointer;
 }
  
+/* Ajustes gerais para dispositivos menores */
+@media screen and (max-width: 768px) {
+	/* Deixar a navegação mais compacta */
+	.navegacao-menu-usuarios {
+		flex-direction: column;
+		align-items: center;
+	}
+  
+	/* Ajustar o campo de pesquisa para ocupar a largura completa */
+	#pesquisa-user {
+		width: 100%;
+		justify-content: center;
+		margin-bottom: 10px;
+	}
+  
+	#myInput {
+		width: 80%;
+	}
+  
+	/* Botão de novo aluno mais visível e centrado */
+	#btn-usuario {
+		width: 100%;
+		justify-content: center;
+		margin-bottom: 10px;
+	}
+  
+	/* Tornar a tabela responsiva */
+	table {
+		width: 100%;
+		display: block;
+		overflow-x: auto;
+		white-space: nowrap;
+	}
+  
+	/* Ajustar os textos da tabela */
+	th, td {
+		font-size: 14px;
+		padding: 8px;
+	}
+  
+	/* Ajustar o menu de paginação */
+	#menu-paginacao {
+		flex-direction: column;
+		align-items: center;
+	}
+  
+	.pagination a {
+		padding: 6px 10px;
+	}
+  
+	#quantidadeUsuarios {
+		font-size: 16px;
+	}
+  
+	/* Colocar as ações da tabela (editar, PDF) em linha com o conteúdo */
+	.btn_editar, .btn_pdf {
+		font-size: 12px;
+		padding: 4px 6px;
+	}
+}

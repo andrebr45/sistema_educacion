@@ -12,37 +12,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        :root {
+        --poppins: 'Poppins', sans-serif;
+        --light: #F9F9F9;
+        --blue: #3c91e6;
+        --light-blue: #CFE8FF;
+        --grey: #eee;
+        --dark-grey: #AAAAAA;
+        --dark: #342E37;
+        --red: #DB504A;
+        --yellow: #FFCE26;
+        --light-yellow: #FFF2C6;
+        --orange: #FD7238;
+        --light-orange: #FFE0F3;
+        }
+        .box-info{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-gap: 24px;
+            margin-top: 36px;
+        }
+        .box-info li{
+            padding: 24px;
+            background: var(--light);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .box-info li .bx{
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: var(--grey);
+            font-size: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .teste{
+            justify-content: center; display: flex; margin: auto;
+        }
+    </style>
 </head>
 <body>
 <div id="corpo">
     <ul class="box-info">
         <li>
-            <i class='material-symbols-outlined'>picture_as_pdf</i>
-            <span class="text">
-                <h4 id="h4">Declaração de comprovante escolar</h4>
-                <a id="gerarComprovanteEscolarPDF" class="gerarpdfbranco">Gerar</a>
-            </span>
+            <i class='bx bx-file' ></i>
+            <div class="teste">
+                <span class="text">
+                    <h4 id="h4">Declaração de comprovante escolar</h4>
+                    <a id="gerarComprovanteEscolarPDF" class="gerarpdfbranco">Gerar</a>
+                </span>
+            </div>
         </li>
         <li>
-            <i class='material-symbols-outlined'>picture_as_pdf</i>
-            <span class="text">
-                <h4 id="h4">Declaração de Transferência</h4>
-                <a id="gerarTransferenciaPDF" class="gerarpdfbranco">Gerar</a>
-            </span>
+            <i class='bx bx-file' ></i>
+            <div class="teste">
+                <span class="text">
+                    <h4 id="h4">Declaração de Transferência</h4>
+                    <a id="gerarTransferenciaPDF" class="gerarpdfbranco">Gerar</a>
+                </span>
+            </div>
+        </li>
+    </ul>
+    <ul class="box-info">
+        <li>
+            <i class='bx bx-file' ></i>
+            <div class="teste">
+                <span class="text">
+                    <h4 id="h4">Declaração de Vaga</h4>
+                    <a id="gerarSolicitacaoVagaPDF" class="gerarpdfbranco">Gerar</a>
+                </span>
+            </div>
         </li>
         <li>
-            <i class='material-symbols-outlined'>picture_as_pdf</i>
-            <span class="text">
-                <h4 id="h4">Declaração de Vaga</h4>
-                <a id="gerarSolicitacaoVagaPDF" class="gerarpdfbranco">Gerar</a>
-            </span>
-        </li>
-        <li>
-            <i class='material-symbols-outlined'>picture_as_pdf</i>
-            <span class="text">
-                <h4 id="h4">Declaração de Conclusão</h4>
-                <a id="gerarConclusaoEscolarPDF" class="gerarpdfbranco">Gerar</a>
-            </span>
+            <i class='bx bx-file' ></i>
+            <div class="teste">
+                <span class="text">
+                    <h4 id="h4">Declaração de Conclusão</h4>
+                    <a id="gerarConclusaoEscolarPDF" class="gerarpdfbranco">Gerar</a>
+                </span>
+            </div>
         </li>
     </ul>
 </div>
